@@ -40,6 +40,7 @@ Moon layout is data-driven by `Assets/_Project/ScriptableObjects/World/World_Def
 ## Runtime System Map
 
 - Bootstrap: `Scripts/Bootstrap/GameBootstrap.cs`
+- Audio: `Scripts/Audio/AudioService.cs`
 - Core state/time: `Scripts/Core/GameStateController.cs`, `GamePhase.cs`, `TimeScaleController.cs`, `TimeScaleConfig.cs`
 - World config: `Scripts/World/WorldConfig.cs`
 - Localization: `Scripts/Localization/GameLanguage.cs`, `LocalizationTable.cs`, `LocalizationService.cs`
@@ -68,6 +69,7 @@ As of 2026-09-06:
 - One upgrade offer can include at most one Command Core branch option.
 - Command Core can be selected to inspect branch levels and current shield blocks.
 - Cannon range preview is shown from the selected slot or built Cannon.
+- Basic SFX are wired for shots, hits, enemy destruction, resource collection, core damage, shield block, build, sell, and upgrades.
 - Orbital Booster is removed from the current playable MVP.
 - UI exists but still needs polish for mobile.
 - Kenney Space Shooter Redux assets are imported under `Assets/_Project/ThirdParty/Kenney/SpaceShooterRedux` and integrated for enemies, projectile, building icons, and starfield background.
@@ -111,7 +113,6 @@ Check console status through Unity Pipeline when needed. If the Editor is unavai
 
 - Polish phase/button/upgrade text.
 - Improve build panel ergonomics for phone screens.
-- Add basic audio feedback.
 - Play through all 10 waves and tune balance.
 - Open the Web build in a desktop browser and verify mouse playability.
 - Check touch input in a mobile browser.

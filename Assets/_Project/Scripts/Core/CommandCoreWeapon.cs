@@ -46,6 +46,7 @@ namespace OrbitalDefense
 
             Projectile projectile = Instantiate(projectilePrefab, muzzle.position, Quaternion.identity);
             projectile.Launch(target, baseDamage + level * damagePerLevel, projectileSpeed);
+            AudioService.PlayCoreShot();
             cooldown = 1f / Mathf.Max(0.1f, baseFireRate + level * fireRatePerLevel);
         }
 

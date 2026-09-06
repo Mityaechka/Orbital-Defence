@@ -15,23 +15,34 @@ MonoBehaviour:
   moons:
   - objectName: Moon
     orbitRingName: MoonOrbitRing
-    scale: {x: 0.7, y: 0.7, z: 1}
-    orbitRadius: 2.65
+    scale: {x: 0.3, y: 0.3, z: 1}
+    orbitRadius: 2
     orbitDegreesPerSecond: 18
-    startAngleDegrees: 35
+    startAngleDegrees: 144.2
     selfRotationDegreesPerSecond: -22
-    slotCount: 3
-    slotRadius: 0.48
+    slotCount: 1
+    slotRadius: 0.51
     slotAngleOffsetDegrees: 45
     orbitRingColor: {r: 0.8, g: 0.86, b: 1, a: 0.18}
-  - objectName: SmallMoon
-    orbitRingName: SmallMoonOrbitRing
-    scale: {x: 0.48, y: 0.48, z: 1}
-    orbitRadius: 3.55
-    orbitDegreesPerSecond: -13
-    startAngleDegrees: 150
-    selfRotationDegreesPerSecond: 28
+  - objectName: Moon
+    orbitRingName: MoonOrbitRing
+    scale: {x: 0.7, y: 0.7, z: 1}
+    orbitRadius: 3.38
+    orbitDegreesPerSecond: 30
+    startAngleDegrees: 101
+    selfRotationDegreesPerSecond: -26.1
     slotCount: 2
-    slotRadius: 0.34
-    slotAngleOffsetDegrees: 90
-    orbitRingColor: {r: 0.35, g: 0.73, b: 1, a: 0.24}
+    slotRadius: 0.51
+    slotAngleOffsetDegrees: 82.8
+    orbitRingColor: {r: 0.8, g: 0.86, b: 1, a: 0.18}
+  - objectName: Moon
+    orbitRingName: MoonOrbitRing
+    scale: {x: 0.5, y: 0.5, z: 1}
+    orbitRadius: 4.78
+    orbitDegreesPerSecond: 10
+    startAngleDegrees: -39.56
+    selfRotationDegreesPerSecond: -20
+    slotCount: 1
+    slotRadius: 0.51
+    slotAngleOffsetDegrees: 82.8
+    orbitRingColor: {r: 0.8, g: 0.86, b: 1, a: 0.18}

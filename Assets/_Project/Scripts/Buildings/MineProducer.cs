@@ -36,6 +36,7 @@ namespace OrbitalDefense
             float multiplier = modifiers != null ? modifiers.MineProductionMultiplier : 1f;
             multiplier *= BoosterAura.GetMiningMultiplier(transform.position);
             wallet.Add(Mathf.RoundToInt(building.Config.ProductionAmount * building.LevelMultiplier * multiplier));
+            AudioService.PlayResourceCollected();
         }
     }
 }

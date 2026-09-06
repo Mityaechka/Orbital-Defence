@@ -39,6 +39,13 @@ namespace OrbitalDefense.EditorTools
             Sprite deathEffectSprite = CreateCircleSprite("DeathEffect", new Color(1f, 0.36f, 0.18f, 0.78f), new Color(1f, 0.84f, 0.30f, 0.20f));
             Sprite coreDamageEffectSprite = CreateCircleSprite("CoreDamageEffect", new Color(1f, 0.18f, 0.25f, 0.82f), new Color(1f, 0.78f, 0.80f, 0.22f));
             Sprite backgroundSprite = LoadSpriteOrFallback($"{KenneySpaceShooterRoot}/Backgrounds/black.png", 100f, () => null);
+            AudioClip laserClip = LoadAudioClip($"{KenneySpaceShooterRoot}/Bonus/sfx_laser1.ogg");
+            AudioClip coreShotClip = LoadAudioClip($"{KenneySpaceShooterRoot}/Bonus/sfx_laser2.ogg");
+            AudioClip hitClip = LoadAudioClip($"{KenneySpaceShooterRoot}/Bonus/sfx_zap.ogg");
+            AudioClip enemyDestroyedClip = LoadAudioClip($"{KenneySpaceShooterRoot}/Bonus/sfx_shieldDown.ogg");
+            AudioClip coreDamageClip = LoadAudioClip($"{KenneySpaceShooterRoot}/Bonus/sfx_lose.ogg");
+            AudioClip shieldBlockClip = LoadAudioClip($"{KenneySpaceShooterRoot}/Bonus/sfx_shieldUp.ogg");
+            AudioClip uiConfirmClip = LoadAudioClip($"{KenneySpaceShooterRoot}/Bonus/sfx_twoTone.ogg");
 
             Projectile projectilePrefab = CreateProjectilePrefab(projectileSprite);
             GameObject hitEffectPrefab = CreateBurstEffectPrefab("HitEffect", hitEffectSprite, 0.22f, 0.10f, 0.55f, 25);
@@ -80,11 +87,13 @@ namespace OrbitalDefense.EditorTools
             UpgradeSystem upgradeSystem = bootstrap.AddComponent<UpgradeSystem>();
             RunModifiers runModifiers = bootstrap.AddComponent<RunModifiers>();
             VisualEffectSpawner visualEffectSpawner = bootstrap.AddComponent<VisualEffectSpawner>();
+            AudioService audioService = bootstrap.AddComponent<AudioService>();
+            AudioSource audioSource = bootstrap.GetComponent<AudioSource>();
 
             GameObject world = new GameObject("GameWorld");
-            Transform planetCenter = CreateWorld(world.transform, worldConfig, planetSprite, moonSprite, slotSprite, commandCoreSprite, commandCoreGlowSprite, projectilePrefab, coreIntegrity, wallet, waveSystem, out BuildSlotSelector[] selectors, out CommandCoreSelector coreSelector, out CommandCoreUpgrade coreUpgrade);
+            Transform planetCenter = CreateWorld(world.transform, worldConfig, planetSprite, moonSprite, slotSprite, commandCoreSprite, commandCoreGlowSprite, projectilePrefab, coreIntegrity, wallet, waveSystem, out CommandCoreSelector coreSelector, out CommandCoreUpgrade coreUpgrade);
             RangePreview rangePreview = CreateRangePreview(world.transform);
-            CreateGameplayUi(catalog, buildSystem, gameState, wallet, coreIntegrity, timeScaleController, localization, waveSystem, upgradeSystem, upgrades, selectors, coreSelector, rangePreview);
+            CreateGameplayUi(catalog, buildSystem, gameState, wallet, coreIntegrity, timeScaleController, localization, waveSystem, upgradeSystem, upgrades, coreSelector, rangePreview);
 
             SetObject(gameBootstrap, "gameState", gameState);
             SetObject(gameBootstrap, "coreIntegrity", coreIntegrity);
@@ -92,6 +101,7 @@ namespace OrbitalDefense.EditorTools
             SetObject(visualEffectSpawner, "hitEffectPrefab", hitEffectPrefab);
             SetObject(visualEffectSpawner, "deathEffectPrefab", deathEffectPrefab);
             SetObject(visualEffectSpawner, "coreDamageEffectPrefab", coreDamageEffectPrefab);
+            ConfigureAudioService(audioService, audioSource, laserClip, coreShotClip, hitClip, enemyDestroyedClip, coreDamageClip, shieldBlockClip, uiConfirmClip);
             SetObject(timeScaleController, "config", timeScale);
             SetObject(localization, "table", localizationTable);
             SetObject(buildSystem, "gameState", gameState);
@@ -112,7 +122,7 @@ namespace OrbitalDefense.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            return $"Created prototype scene at {ScenePath} with {waves.Length} waves, {GetConfiguredMoonCount(worldConfig)} configured moons, and {selectors.Length} build slots.";
+            return $"Created prototype scene at {ScenePath} with {waves.Length} waves and {GetConfiguredMoonCount(worldConfig)} configured moons.";
         }
 
         private static void EnsureFolders()
@@ -153,7 +163,7 @@ namespace OrbitalDefense.EditorTools
             return moons != null ? moons.arraySize : 0;
         }
 
-        private static Transform CreateWorld(Transform parent, WorldConfig worldConfig, Sprite planetSprite, Sprite moonSprite, Sprite slotSprite, Sprite commandCoreSprite, Sprite commandCoreGlowSprite, Projectile projectilePrefab, CoreIntegrity coreIntegrity, ResourceWallet wallet, WaveSystem waveSystem, out BuildSlotSelector[] selectors, out CommandCoreSelector coreSelector, out CommandCoreUpgrade coreUpgrade)
+        private static Transform CreateWorld(Transform parent, WorldConfig worldConfig, Sprite planetSprite, Sprite moonSprite, Sprite slotSprite, Sprite commandCoreSprite, Sprite commandCoreGlowSprite, Projectile projectilePrefab, CoreIntegrity coreIntegrity, ResourceWallet wallet, WaveSystem waveSystem, out CommandCoreSelector coreSelector, out CommandCoreUpgrade coreUpgrade)
         {
             GameObject planet = CreateSpriteObject("Planet", parent, planetSprite, new Vector3(2.25f, 2.25f, 1f), 0);
             planet.transform.position = Vector3.zero;
@@ -163,54 +173,16 @@ namespace OrbitalDefense.EditorTools
             planetCenter.transform.SetParent(planet.transform, false);
             Transform commandCore = CreateCommandCore(planet.transform, commandCoreSprite, commandCoreGlowSprite, projectilePrefab, coreIntegrity, wallet, waveSystem, out coreSelector, out coreUpgrade);
 
-            List<BuildSlotSelector> moonSlots = new();
-            if (worldConfig != null)
-            {
-                SerializedObject serializedWorld = new SerializedObject(worldConfig);
-                SerializedProperty moons = serializedWorld.FindProperty("moons");
-                for (int i = 0; moons != null && i < moons.arraySize; i++)
-                {
-                    BuildSlotSelector[] createdSlots = CreateMoon(parent, planet.transform, moonSprite, slotSprite, moons.GetArrayElementAtIndex(i));
-                    moonSlots.AddRange(createdSlots);
-                }
-            }
+            GameObject moonsRoot = new GameObject("Moons", typeof(MoonSpawner));
+            moonsRoot.transform.SetParent(parent, false);
+            MoonSpawner spawner = moonsRoot.GetComponent<MoonSpawner>();
+            SetObject(spawner, "worldConfig", worldConfig);
+            SetObject(spawner, "orbitCenter", planet.transform);
+            SetObject(spawner, "moonSprite", moonSprite);
+            SetObject(spawner, "slotSprite", slotSprite);
+            spawner.Rebuild();
 
-            selectors = moonSlots.ToArray();
             return commandCore != null ? commandCore : planetCenter.transform;
-        }
-
-        private static BuildSlotSelector[] CreateMoon(Transform parent, Transform orbitCenter, Sprite moonSprite, Sprite slotSprite, SerializedProperty config)
-        {
-            if (config == null)
-            {
-                return new BuildSlotSelector[0];
-            }
-
-            string objectName = config.FindPropertyRelative("objectName").stringValue;
-            objectName = string.IsNullOrWhiteSpace(objectName) ? "Moon" : objectName;
-            string orbitRingName = config.FindPropertyRelative("orbitRingName").stringValue;
-            orbitRingName = string.IsNullOrWhiteSpace(orbitRingName) ? $"{objectName}OrbitRing" : orbitRingName;
-            Vector3 scale = config.FindPropertyRelative("scale").vector3Value;
-            float orbitRadius = config.FindPropertyRelative("orbitRadius").floatValue;
-            float orbitDegreesPerSecond = config.FindPropertyRelative("orbitDegreesPerSecond").floatValue;
-            float startAngleDegrees = config.FindPropertyRelative("startAngleDegrees").floatValue;
-            float selfRotationDegreesPerSecond = config.FindPropertyRelative("selfRotationDegreesPerSecond").floatValue;
-            int slotCount = Mathf.Max(0, config.FindPropertyRelative("slotCount").intValue);
-            float slotRadius = config.FindPropertyRelative("slotRadius").floatValue;
-            float slotAngleOffsetDegrees = config.FindPropertyRelative("slotAngleOffsetDegrees").floatValue;
-            Color orbitRingColor = config.FindPropertyRelative("orbitRingColor").colorValue;
-
-            CreateOrbitRing(orbitRingName, parent, orbitRadius, orbitRingColor);
-
-            GameObject moon = CreateSpriteObject(objectName, parent, moonSprite, scale, 1);
-            OrbitMover moonOrbit = moon.AddComponent<OrbitMover>();
-            SetObject(moonOrbit, "center", orbitCenter);
-            SetFloat(moonOrbit, "radius", orbitRadius);
-            SetFloat(moonOrbit, "degreesPerSecond", orbitDegreesPerSecond);
-            SetFloat(moonOrbit, "startAngleDegrees", startAngleDegrees);
-            SetFloat(moon.AddComponent<SelfRotator>(), "degreesPerSecond", selfRotationDegreesPerSecond);
-
-            return CreateSurfaceSlots($"{objectName}SurfaceSlots", moon.transform, slotSprite, BuildSlotType.MoonSurface, slotCount, slotRadius, slotAngleOffsetDegrees);
         }
 
         private static Transform CreateCommandCore(Transform parent, Sprite coreSprite, Sprite glowSprite, Projectile projectilePrefab, CoreIntegrity coreIntegrity, ResourceWallet wallet, WaveSystem waveSystem, out CommandCoreSelector selector, out CommandCoreUpgrade upgrade)
@@ -243,33 +215,7 @@ namespace OrbitalDefense.EditorTools
             return root.transform;
         }
 
-        private static BuildSlotSelector[] CreateSurfaceSlots(string rootName, Transform parent, Sprite slotSprite, BuildSlotType slotType, int count, float radius, float angleOffset)
-        {
-            BuildSlotSelector[] selectors = new BuildSlotSelector[count];
-            GameObject root = new GameObject(rootName);
-            root.transform.SetParent(parent, false);
-
-            for (int i = 0; i < count; i++)
-            {
-                float angle = angleOffset + i * 360f / count;
-                Vector3 position = Quaternion.Euler(0f, 0f, angle) * Vector3.right * radius;
-                GameObject slot = CreateSpriteObject($"{rootName}_{i + 1:00}", root.transform, slotSprite, new Vector3(0.22f, 0.22f, 1f), 5);
-                slot.transform.localPosition = position;
-
-                BuildSlot buildSlot = slot.AddComponent<BuildSlot>();
-                SetEnum(buildSlot, "slotType", (int)slotType);
-                SetObject(buildSlot, "placementPoint", slot.transform);
-
-                CircleCollider2D collider = slot.AddComponent<CircleCollider2D>();
-                collider.radius = 0.55f;
-                slot.AddComponent<BuildSlotSelectionFeedback>();
-                selectors[i] = slot.AddComponent<BuildSlotSelector>();
-            }
-
-            return selectors;
-        }
-
-        private static void CreateGameplayUi(BuildCatalog catalog, BuildSystem buildSystem, GameStateController gameState, ResourceWallet wallet, CoreIntegrity coreIntegrity, TimeScaleController timeScaleController, LocalizationService localization, WaveSystem waveSystem, UpgradeSystem upgradeSystem, UpgradeConfig[] upgrades, BuildSlotSelector[] selectors, CommandCoreSelector coreSelector, RangePreview rangePreview)
+        private static void CreateGameplayUi(BuildCatalog catalog, BuildSystem buildSystem, GameStateController gameState, ResourceWallet wallet, CoreIntegrity coreIntegrity, TimeScaleController timeScaleController, LocalizationService localization, WaveSystem waveSystem, UpgradeSystem upgradeSystem, UpgradeConfig[] upgrades, CommandCoreSelector coreSelector, RangePreview rangePreview)
         {
             GameObject canvasGo = new GameObject("GameplayCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             Canvas canvas = canvasGo.GetComponent<Canvas>();
@@ -334,11 +280,6 @@ namespace OrbitalDefense.EditorTools
             UnityEventTools.AddPersistentListener(cannonButton.onClick, buildPresenter.BuildCannon);
             UnityEventTools.AddPersistentListener(upgradeButton.onClick, buildPresenter.UpgradeSelected);
             UnityEventTools.AddPersistentListener(sellButton.onClick, buildPresenter.SellSelected);
-
-            for (int i = 0; i < selectors.Length; i++)
-            {
-                SetObject(selectors[i], "buildPanel", buildPresenter);
-            }
 
             CommandCorePanelPresenter corePresenter = CreateCommandCorePanel(canvasGo.transform, coreIntegrity, wallet, gameState, localization);
             if (coreSelector != null)
@@ -419,7 +360,7 @@ namespace OrbitalDefense.EditorTools
 
         private static void CreateCamera()
         {
-            GameObject cameraGo = new GameObject("Main Camera", typeof(Camera), typeof(Physics2DRaycaster));
+            GameObject cameraGo = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener), typeof(Physics2DRaycaster));
             cameraGo.tag = "MainCamera";
             cameraGo.transform.position = new Vector3(0f, 0f, -10f);
             Camera camera = cameraGo.GetComponent<Camera>();
@@ -451,25 +392,6 @@ namespace OrbitalDefense.EditorTools
             return go;
         }
 
-        private static void CreateOrbitRing(string name, Transform parent, float radius, Color color)
-        {
-            GameObject ring = new GameObject(name, typeof(LineRenderer));
-            ring.transform.SetParent(parent, false);
-            LineRenderer line = ring.GetComponent<LineRenderer>();
-            line.loop = true;
-            line.useWorldSpace = false;
-            line.positionCount = 96;
-            line.startWidth = 0.018f;
-            line.endWidth = 0.018f;
-            line.material = GetLineMaterial(color);
-
-            for (int i = 0; i < line.positionCount; i++)
-            {
-                float angle = i * Mathf.PI * 2f / line.positionCount;
-                line.SetPosition(i, new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0f));
-            }
-        }
-
         private static RangePreview CreateRangePreview(Transform parent)
         {
             GameObject go = new GameObject("CannonRangePreview", typeof(LineRenderer), typeof(RangePreview));
@@ -491,22 +413,6 @@ namespace OrbitalDefense.EditorTools
             SetFloat(preview, "lineWidth", 0.025f);
             SetColor(preview, "previewColor", new Color(0.30f, 0.82f, 1f, 0.72f));
             return preview;
-        }
-
-        private static Material GetLineMaterial(Color color)
-        {
-            string path = $"{GeneratedMaterials}/OrbitLine.mat";
-            Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (material == null)
-            {
-                Shader shader = Shader.Find("Sprites/Default") ?? Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
-                material = new Material(shader);
-                AssetDatabase.CreateAsset(material, path);
-            }
-
-            material.color = color;
-            EditorUtility.SetDirty(material);
-            return material;
         }
 
         private static Material GetRangePreviewMaterial()
@@ -587,6 +493,33 @@ namespace OrbitalDefense.EditorTools
             return AssetDatabase.LoadAssetAtPath<GameObject>(path).GetComponent<EnemyMover>();
         }
 
+        private static void ConfigureAudioService(AudioService audioService, AudioSource source, AudioClip laserClip, AudioClip coreShotClip, AudioClip hitClip, AudioClip enemyDestroyedClip, AudioClip coreDamageClip, AudioClip shieldBlockClip, AudioClip uiConfirmClip)
+        {
+            if (audioService == null)
+            {
+                return;
+            }
+
+            if (source != null)
+            {
+                source.playOnAwake = false;
+                source.spatialBlend = 0f;
+                source.volume = 1f;
+            }
+
+            SetObject(audioService, "source", source);
+            SetObject(audioService, "cannonShotClip", laserClip);
+            SetObject(audioService, "coreShotClip", coreShotClip);
+            SetObject(audioService, "hitClip", hitClip);
+            SetObject(audioService, "enemyDestroyedClip", enemyDestroyedClip);
+            SetObject(audioService, "coreDamageClip", coreDamageClip);
+            SetObject(audioService, "shieldBlockClip", shieldBlockClip);
+            SetObject(audioService, "resourceCollectedClip", uiConfirmClip);
+            SetObject(audioService, "buildClip", uiConfirmClip);
+            SetObject(audioService, "upgradeClip", uiConfirmClip);
+            SetObject(audioService, "sellClip", shieldBlockClip);
+        }
+
         private static void SavePrefab(GameObject go, string path)
         {
             AssetDatabase.DeleteAsset(path);
@@ -657,6 +590,11 @@ namespace OrbitalDefense.EditorTools
 
             Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
             return sprite != null ? sprite : fallback();
+        }
+
+        private static AudioClip LoadAudioClip(string assetPath)
+        {
+            return AssetDatabase.LoadAssetAtPath<AudioClip>(assetPath);
         }
 
         private static TimeScaleConfig CreateTimeScaleConfig()

@@ -40,12 +40,14 @@ namespace OrbitalDefense
             if (commandCoreUpgrade != null && commandCoreUpgrade.TryBlockImpact())
             {
                 VisualEffectSpawner.SpawnCoreDamage(target.position);
+                AudioService.PlayShieldBlock();
                 Destroy(gameObject);
                 return;
             }
 
             coreIntegrity.TakeDamage(enemyMover.Config.CoreDamage);
             VisualEffectSpawner.SpawnCoreDamage(target.position);
+            AudioService.PlayCoreDamage();
             Destroy(gameObject);
         }
     }

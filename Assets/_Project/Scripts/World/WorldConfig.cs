@@ -9,6 +9,13 @@ namespace OrbitalDefense
         [SerializeField] private MoonConfig[] moons;
 
         public MoonConfig[] Moons => moons;
+
+        public static event Action<WorldConfig> Changed;
+
+        private void OnValidate()
+        {
+            Changed?.Invoke(this);
+        }
     }
 
     [Serializable]

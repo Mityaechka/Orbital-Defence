@@ -45,6 +45,7 @@ namespace OrbitalDefense
                 }
 
                 VisualEffectSpawner.SpawnHit(lastKnownTargetPosition);
+                AudioService.PlayHit();
                 Destroy(gameObject);
             }
         }

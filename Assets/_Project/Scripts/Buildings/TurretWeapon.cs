@@ -75,6 +75,7 @@ namespace OrbitalDefense
             Projectile projectile = Instantiate(projectilePrefab, muzzle.position, Quaternion.identity);
             float damageMultiplier = modifiers != null ? modifiers.CannonDamageMultiplier : 1f;
             projectile.Launch(target, Mathf.RoundToInt(building.Config.Damage * building.LevelMultiplier * damageMultiplier), building.Config.ProjectileSpeed);
+            AudioService.PlayCannonShot();
         }
     }
 }

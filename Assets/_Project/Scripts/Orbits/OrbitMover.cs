@@ -11,6 +11,16 @@ namespace OrbitalDefense
 
         public float CurrentAngleDegrees { get; private set; }
 
+        public void Initialize(Transform orbitCenter, float orbitRadius, float degreesPerSecond, float startAngleDegrees)
+        {
+            center = orbitCenter;
+            radius = orbitRadius;
+            this.degreesPerSecond = degreesPerSecond;
+            this.startAngleDegrees = startAngleDegrees;
+            CurrentAngleDegrees = startAngleDegrees;
+            ApplyPosition();
+        }
+
         private void Awake()
         {
             CurrentAngleDegrees = startAngleDegrees;

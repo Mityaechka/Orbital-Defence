@@ -12,9 +12,11 @@ namespace OrbitalDefense
         [SerializeField] private CoreIntegrity coreIntegrity;
         [SerializeField] private Transform planetCenter;
         [SerializeField] private WaveConfig[] waves;
+        [SerializeField] private float waveEndDelay = 2f;
 
         private readonly List<Health> aliveEnemies = new();
         private bool spawning;
+        private bool completingWave;
         private int currentWaveIndex = -1;
 
         public event Action<int, int> WaveStarted;
@@ -34,10 +36,18 @@ namespace OrbitalDefense
         {
             aliveEnemies.RemoveAll(enemy => enemy == null);
 
-            if (!spawning && gameState != null && gameState.IsWaveActive && aliveEnemies.Count == 0)
+            if (!spawning && !completingWave && gameState != null && gameState.IsWaveActive && aliveEnemies.Count == 0)
             {
-                CompleteWave();
+                completingWave = true;
+                StartCoroutine(CompleteWaveAfterDelay());
             }
+        }
+
+        private IEnumerator CompleteWaveAfterDelay()
+        {
+            yield return new WaitForSeconds(waveEndDelay);
+            CompleteWave();
+            completingWave = false;
         }
 
         public void StartNextWave()
@@ -109,6 +119,11 @@ namespace OrbitalDefense
 
         private void CompleteWave()
         {
+            foreach (Projectile projectile in FindObjectsByType<Projectile>(FindObjectsSortMode.None))
+            {
+                Destroy(projectile.gameObject);
+            }
+
             WaveConfig completedWave = currentWaveIndex >= 0 && waves != null && currentWaveIndex < waves.Length
                 ? waves[currentWaveIndex]
                 : null;

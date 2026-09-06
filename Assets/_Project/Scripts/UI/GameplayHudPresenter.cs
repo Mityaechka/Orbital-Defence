@@ -172,6 +172,11 @@ namespace OrbitalDefense
             {
                 phaseText.text = Text(GetPhaseKey(phase));
             }
+
+            if (startWaveButton != null)
+            {
+                startWaveButton.gameObject.SetActive(phase != GamePhase.Wave);
+            }
         }
 
         private void UpdateSpeed(float scale)

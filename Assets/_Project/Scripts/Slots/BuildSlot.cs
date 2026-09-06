@@ -12,6 +12,11 @@ namespace OrbitalDefense
         public bool IsOccupied => CurrentBuilding != null;
         public Transform PlacementPoint => placementPoint != null ? placementPoint : transform;
 
+        public void Initialize(BuildSlotType type)
+        {
+            slotType = type;
+        }
+
         public bool CanAccept(BuildingConfig config)
         {
             return config != null && !IsOccupied && config.CanBuildOn(slotType);

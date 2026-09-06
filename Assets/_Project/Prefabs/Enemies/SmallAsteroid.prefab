@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &66088352254754166
+--- !u!1 &3378586551286533041
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,14 +8,14 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 9168450172096805302}
-  - component: {fileID: 3915480076195351315}
-  - component: {fileID: 4763764620073919506}
-  - component: {fileID: 4027066160232865898}
-  - component: {fileID: 4594885528702588693}
-  - component: {fileID: 482123534846924288}
-  - component: {fileID: 7868144854947215490}
-  - component: {fileID: 8071832585085139182}
+  - component: {fileID: 2252786922647404409}
+  - component: {fileID: 30188909128996376}
+  - component: {fileID: 2847601994654987667}
+  - component: {fileID: 1418258330238997652}
+  - component: {fileID: 7463490510581736031}
+  - component: {fileID: 2135272014084301633}
+  - component: {fileID: 1194131362056706994}
+  - component: {fileID: 3436268354955687040}
   m_Layer: 0
   m_Name: SmallAsteroid
   m_TagString: Untagged
@@ -23,13 +23,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &9168450172096805302
+--- !u!4 &2252786922647404409
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 66088352254754166}
+  m_GameObject: {fileID: 3378586551286533041}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -38,14 +38,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &3915480076195351315
+--- !u!212 &30188909128996376
 SpriteRenderer:
   serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 66088352254754166}
+  m_GameObject: {fileID: 3378586551286533041}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -98,13 +98,13 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
---- !u!58 &4763764620073919506
+--- !u!58 &2847601994654987667
 CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 66088352254754166}
+  m_GameObject: {fileID: 3378586551286533041}
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
@@ -134,26 +134,26 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
---- !u!114 &4027066160232865898
+--- !u!114 &1418258330238997652
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 66088352254754166}
+  m_GameObject: {fileID: 3378586551286533041}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: af40f806fcc4f4a8ab951db9a0a14d90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OrbitalDefense.Health
   maxHealth: 20
---- !u!114 &4594885528702588693
+--- !u!114 &7463490510581736031
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 66088352254754166}
+  m_GameObject: {fileID: 3378586551286533041}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6c076fa53caa64b9cab50d8142dcb712, type: 3}
@@ -162,13 +162,13 @@ MonoBehaviour:
   targetRenderer: {fileID: 0}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   duration: 0.08
---- !u!114 &482123534846924288
+--- !u!114 &2135272014084301633
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 66088352254754166}
+  m_GameObject: {fileID: 3378586551286533041}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 83e91632ae2154310b6199fef2b73976, type: 3}
@@ -176,13 +176,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OrbitalDefense.EnemyMover
   config: {fileID: 0}
   target: {fileID: 0}
---- !u!114 &7868144854947215490
+--- !u!114 &1194131362056706994
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 66088352254754166}
+  m_GameObject: {fileID: 3378586551286533041}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2e4df7791abc642279e8a45f95602869, type: 3}
@@ -192,13 +192,13 @@ MonoBehaviour:
   target: {fileID: 0}
   coreIntegrity: {fileID: 0}
   commandCoreUpgrade: {fileID: 0}
---- !u!114 &8071832585085139182
+--- !u!114 &3436268354955687040
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 66088352254754166}
+  m_GameObject: {fileID: 3378586551286533041}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 168c99b22f5a54a1b9fc0835e618d50e, type: 3}

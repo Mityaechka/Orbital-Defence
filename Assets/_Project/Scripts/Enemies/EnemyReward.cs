@@ -36,8 +36,8 @@ namespace OrbitalDefense
             if (wallet != null && enemyMover != null && enemyMover.Config != null)
             {
                 wallet.Add(enemyMover.Config.Reward);
+                AudioService.PlayEnemyDestroyed();
             }
         }
     }
 }
-

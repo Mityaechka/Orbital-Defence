@@ -1,5 +1,7 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace OrbitalDefense
@@ -56,6 +58,11 @@ namespace OrbitalDefense
 
         private void Update()
         {
+            if (selectedSlot != null && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && !EventSystem.current.IsPointerOverGameObject())
+            {
+                Hide();
+            }
+
             if (feedbackText == null || feedbackTimer <= 0f)
             {
                 return;

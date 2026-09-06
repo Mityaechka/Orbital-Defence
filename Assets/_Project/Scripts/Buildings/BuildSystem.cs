@@ -39,6 +39,7 @@ namespace OrbitalDefense
             Building building = Instantiate(config.Prefab, point.position, point.rotation, point);
             building.Initialize(config, slot);
             slot.Occupy(building);
+            AudioService.PlayBuild();
             return true;
         }
 
@@ -59,6 +60,7 @@ namespace OrbitalDefense
             slot.Clear();
             Destroy(building.gameObject);
             wallet?.Add(refund);
+            AudioService.PlaySell();
             return true;
         }
 
@@ -82,6 +84,7 @@ namespace OrbitalDefense
             }
 
             building.Upgrade();
+            AudioService.PlayUpgrade();
             return true;
         }
 

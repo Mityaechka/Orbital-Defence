@@ -85,6 +85,7 @@ namespace OrbitalDefense
 
             gameState?.EnterBuildPhase();
             currentChoices = null;
+            AudioService.PlayUpgrade();
         }
 
         private void HandlePhaseChanged(GamePhase phase)
