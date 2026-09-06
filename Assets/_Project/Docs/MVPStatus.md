@@ -21,7 +21,9 @@ MVP уже имеет базовый игровой скелет: сцена, п
 - [x] Создана сцена `Assets/_Project/Scenes/MainGameplay.unity`.
 - [x] Добавлены placeholder PNG sprites для планеты, луны, слотов, зданий, врагов и снаряда.
 - [x] Добавлен бесплатный CC0 asset pack Kenney Space Shooter Redux.
+- [x] Добавлен бесплатный CC0 asset pack Kenney Sci-Fi RTS для спрайтов построек.
 - [x] Kenney sprites подключены для врагов, снаряда, части зданий и starfield background.
+- [x] Kenney Sci-Fi RTS sprites подключены для визуалов зданий на лунах.
 - [x] Добавлены материалы/линии орбит.
 - [x] Созданы центральная планета и две луны.
 - [x] Планета вращается вокруг своей оси.

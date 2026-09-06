@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: Cannon
   displayNameKey: building.Cannon.name
   kind: 1
-  icon: {fileID: -1286424900519430524, guid: 4d6f97d01941c4ec3ad7dde4074e83d0, type: 3}
-  prefab: {fileID: 3236472654821548579, guid: 159a423b1c2904953987542e616df88a, type: 3}
-  buildCost: 60
+  icon: {fileID: 1506451772357543813, guid: 23c945e5ad0db46c6900e52fd4aaf352, type: 3}
+  prefab: {fileID: 2117151740266476138, guid: 159a423b1c2904953987542e616df88a, type: 3}
+  buildCost: 75
   maxLevel: 3
   allowedSlots: 00000000i
   productionAmount: 10

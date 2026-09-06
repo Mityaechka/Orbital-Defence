@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: Mine
   displayNameKey: building.Mine.name
   kind: 0
-  icon: {fileID: 2727193576502022816, guid: 72ebe405459954d358c85a6484445ea7, type: 3}
-  prefab: {fileID: 2073823556598297251, guid: af3d6966853fa4c69a9bb30ac4164998, type: 3}
-  buildCost: 40
+  icon: {fileID: 8058139704462727654, guid: 35edae679cefe4865ab14d09afb8621a, type: 3}
+  prefab: {fileID: 7789735744414379584, guid: af3d6966853fa4c69a9bb30ac4164998, type: 3}
+  buildCost: 50
   maxLevel: 3
   allowedSlots: 00000000i
   productionAmount: 10

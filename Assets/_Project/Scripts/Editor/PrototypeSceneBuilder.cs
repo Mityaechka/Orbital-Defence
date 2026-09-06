@@ -19,6 +19,7 @@ namespace OrbitalDefense.EditorTools
         private const string GeneratedMaterials = "Assets/_Project/Art/Materials";
         private const string ScenePath = "Assets/_Project/Scenes/MainGameplay.unity";
         private const string KenneySpaceShooterRoot = "Assets/_Project/ThirdParty/Kenney/SpaceShooterRedux";
+        private const string KenneySciFiRtsRoot = "Assets/_Project/Art/ThirdParty/Kenney/SciFiRTS";
 
         [CliCommand("orbital_defense_build_prototype", "Build the first Orbital Defense prototype scene", MainThreadRequired = true)]
         public static string BuildPrototypeScene()
@@ -30,8 +31,8 @@ namespace OrbitalDefense.EditorTools
             Sprite slotSprite = CreateCircleSprite("BuildSlot", new Color(0.95f, 0.86f, 0.31f, 0.78f), new Color(1f, 1f, 1f, 0.95f));
             Sprite commandCoreSprite = CreateCircleSprite("CommandCore", new Color(0.95f, 0.68f, 0.22f, 1f), new Color(1f, 0.98f, 0.72f, 1f));
             Sprite commandCoreGlowSprite = CreateCircleSprite("CommandCoreGlow", new Color(0.30f, 0.82f, 1f, 0.42f), new Color(1f, 0.92f, 0.35f, 0.22f));
-            Sprite mineSprite = LoadSpriteOrFallback($"{KenneySpaceShooterRoot}/PNG/Power-ups/powerupYellow_bolt.png", 80f, () => CreateCircleSprite("Mine", new Color(0.30f, 0.78f, 0.36f, 1f), new Color(0.84f, 1f, 0.47f, 1f)));
-            Sprite cannonSprite = LoadSpriteOrFallback($"{KenneySpaceShooterRoot}/PNG/Parts/gun09.png", 80f, () => CreateCircleSprite("Cannon", new Color(0.86f, 0.28f, 0.24f, 1f), new Color(1f, 0.72f, 0.42f, 1f)));
+            Sprite mineSprite = LoadSpriteOrFallback($"{KenneySciFiRtsRoot}/Structure/scifiStructure_12.png", 64f, () => CreateCircleSprite("Mine", new Color(0.30f, 0.78f, 0.36f, 1f), new Color(0.84f, 1f, 0.47f, 1f)));
+            Sprite cannonSprite = LoadSpriteOrFallback($"{KenneySciFiRtsRoot}/Structure/scifiStructure_16.png", 64f, () => CreateCircleSprite("Cannon", new Color(0.86f, 0.28f, 0.24f, 1f), new Color(1f, 0.72f, 0.42f, 1f)));
             Sprite projectileSprite = LoadSpriteOrFallback($"{KenneySpaceShooterRoot}/PNG/Lasers/laserBlue08.png", 32f, () => CreateCircleSprite("Projectile", new Color(1f, 0.92f, 0.30f, 1f), new Color(1f, 1f, 1f, 1f)));
             Sprite asteroidSprite = LoadSpriteOrFallback($"{KenneySpaceShooterRoot}/PNG/Meteors/meteorBrown_big3.png", 80f, () => CreateCircleSprite("SmallAsteroid", new Color(0.56f, 0.43f, 0.33f, 1f), new Color(0.88f, 0.72f, 0.50f, 1f)));
             Sprite scoutSprite = LoadSpriteOrFallback($"{KenneySpaceShooterRoot}/PNG/Enemies/enemyBlue4.png", 80f, () => CreateCircleSprite("AlienScout", new Color(0.62f, 0.24f, 0.88f, 1f), new Color(0.94f, 0.62f, 1f, 1f)));
@@ -258,8 +259,9 @@ namespace OrbitalDefense.EditorTools
 
             GameObject buildPanel = CreatePanel("BuildPanel", canvasGo.transform, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(24f, 24f), new Vector2(-24f, 190f), new Color(0.05f, 0.07f, 0.13f, 0.86f));
             BuildPanelPresenter buildPresenter = buildPanel.AddComponent<BuildPanelPresenter>();
-            TMP_Text slotText = CreateText("SelectedSlotText", buildPanel.transform, "Select slot", 32, TextAlignmentOptions.Left, new Vector2(0.03f, 0.58f), new Vector2(0.36f, 0.92f));
-            TMP_Text feedbackText = CreateText("BuildFeedbackText", buildPanel.transform, string.Empty, 28, TextAlignmentOptions.Left, new Vector2(0.03f, 0.14f), new Vector2(0.36f, 0.48f));
+            TMP_Text slotText = CreateText("SelectedSlotText", buildPanel.transform, "Select slot", 32, TextAlignmentOptions.Left, new Vector2(0.03f, 0.66f), new Vector2(0.36f, 0.92f));
+            TMP_Text statsText = CreateText("SelectedStatsText", buildPanel.transform, "Available stats", 24, TextAlignmentOptions.Left, new Vector2(0.03f, 0.24f), new Vector2(0.36f, 0.62f));
+            TMP_Text feedbackText = CreateText("BuildFeedbackText", buildPanel.transform, string.Empty, 24, TextAlignmentOptions.Left, new Vector2(0.03f, 0.08f), new Vector2(0.36f, 0.22f));
             feedbackText.color = new Color(1f, 0.55f, 0.42f, 1f);
             Button mineButton = CreateButton("MineButton", buildPanel.transform, "Mine", new Vector2(0.38f, 0.18f), new Vector2(0.56f, 0.82f), new Color(0.22f, 0.66f, 0.34f, 0.95f));
             Button cannonButton = CreateButton("CannonButton", buildPanel.transform, "Cannon", new Vector2(0.58f, 0.18f), new Vector2(0.76f, 0.82f), new Color(0.82f, 0.26f, 0.24f, 0.95f));
@@ -270,6 +272,7 @@ namespace OrbitalDefense.EditorTools
             SetObject(buildPresenter, "localization", localization);
             SetObject(buildPresenter, "panelRoot", buildPanel);
             SetObject(buildPresenter, "selectedSlotText", slotText);
+            SetObject(buildPresenter, "statsText", statsText);
             SetObject(buildPresenter, "mineButton", mineButton);
             SetObject(buildPresenter, "cannonButton", cannonButton);
             SetObject(buildPresenter, "upgradeButton", upgradeButton);
@@ -332,6 +335,8 @@ namespace OrbitalDefense.EditorTools
             SetObject(gameOverPresenter, "bodyText", gameOverBody);
             SetObject(gameOverPresenter, "restartButton", restartButton);
             UnityEventTools.AddPersistentListener(restartButton.onClick, gameOverPresenter.Restart);
+
+            CreateWaveDirectionWarning(canvasGo.transform, gameState, waveSystem);
         }
 
         private static CommandCorePanelPresenter CreateCommandCorePanel(Transform parent, CoreIntegrity coreIntegrity, ResourceWallet wallet, GameStateController gameState, LocalizationService localization)
@@ -355,6 +360,40 @@ namespace OrbitalDefense.EditorTools
             SetObject(presenter, "feedbackText", feedback);
             SetObject(presenter, "closeButton", close);
             UnityEventTools.AddPersistentListener(close.onClick, presenter.Hide);
+            return presenter;
+        }
+
+        private static WaveDirectionWarningPresenter CreateWaveDirectionWarning(Transform parent, GameStateController gameState, WaveSystem waveSystem)
+        {
+            GameObject warningGo = new GameObject("WaveDirectionWarning", typeof(RectTransform), typeof(CanvasGroup));
+            warningGo.transform.SetParent(parent, false);
+
+            RectTransform rect = warningGo.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(180f, 180f);
+
+            CanvasGroup canvasGroup = warningGo.GetComponent<CanvasGroup>();
+            canvasGroup.alpha = 0f;
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.interactable = false;
+
+            WaveDirectionWarningPresenter presenter = warningGo.AddComponent<WaveDirectionWarningPresenter>();
+            TMP_Text warningText = CreateText("WarningText", warningGo.transform, "!", 92f, TextAlignmentOptions.Center, Vector2.zero, Vector2.one);
+            warningText.enableAutoSizing = true;
+            warningText.fontSizeMin = 54f;
+            warningText.fontSizeMax = 92f;
+            warningText.fontStyle = FontStyles.Bold;
+            warningText.color = new Color(1f, 0.94f, 0.36f, 1f);
+            warningText.raycastTarget = false;
+
+            SetObject(presenter, "gameState", gameState);
+            SetObject(presenter, "waveSystem", waveSystem);
+            SetObject(presenter, "warningRect", rect);
+            SetObject(presenter, "canvasGroup", canvasGroup);
+            SetObject(presenter, "warningText", warningText);
             return presenter;
         }
 
@@ -455,7 +494,9 @@ namespace OrbitalDefense.EditorTools
         private static Building CreateBuildingPrefab(string name, Sprite sprite, System.Type behaviorType)
         {
             string path = $"Assets/_Project/Prefabs/Buildings/{name}.prefab";
-            GameObject go = CreateSpriteObject(name, null, sprite, new Vector3(0.42f, 0.42f, 1f), 10);
+            // Building slots are scaled down to sit on the moon surface, so compensate here
+            // to keep the placed building readable after inheriting the slot transform.
+            GameObject go = CreateSpriteObject(name, null, sprite, new Vector3(2.4f, 2.4f, 1f), 10);
             Building building = go.AddComponent<Building>();
             Component behavior = go.AddComponent(behaviorType);
             SetObject(behavior, "building", building);
@@ -752,7 +793,7 @@ namespace OrbitalDefense.EditorTools
 
             SerializedObject serialized = new SerializedObject(table);
             SerializedProperty entries = serialized.FindProperty("entries");
-            entries.arraySize = 47;
+            entries.arraySize = 63;
 
             int index = 0;
             SetLocalizationEntry(entries, index++, "hud.minerals", "Минералы: {0}", "Minerals: {0}");
@@ -779,6 +820,21 @@ namespace OrbitalDefense.EditorTools
             SetLocalizationEntry(entries, index++, "build.select_slot", "Выберите слот", "Select slot");
             SetLocalizationEntry(entries, index++, "build.moon_slot", "Слот луны", "Moon slot");
             SetLocalizationEntry(entries, index++, "build.occupied_slot", "{0} ур. {1}/{2}", "{0} Lv {1}/{2}");
+            SetLocalizationEntry(entries, index++, "build.stats.empty", "Выберите слот, чтобы увидеть статы здания.", "Select a slot to see building stats.");
+            SetLocalizationEntry(entries, index++, "build.stats.available", "Доступные здания:", "Available buildings:");
+            SetLocalizationEntry(entries, index++, "build.stats.none", "Для этого слота нет доступных зданий.", "No buildings can be placed here.");
+            SetLocalizationEntry(entries, index++, "build.stats.level", "Уровень {0}/{1}", "Level {0}/{1}");
+            SetLocalizationEntry(entries, index++, "build.stats.production", "Добыча: {0} минералов каждые {1:0.#} с", "Production: {0} minerals every {1:0.#} s");
+            SetLocalizationEntry(entries, index++, "build.stats.damage", "Урон: {0}", "Damage: {0}");
+            SetLocalizationEntry(entries, index++, "build.stats.fire_rate", "Скорострельность: {0:0.#} выстр./с", "Fire rate: {0:0.#} shots/s");
+            SetLocalizationEntry(entries, index++, "build.stats.range", "Дальность: {0:0.#}", "Range: {0:0.#}");
+            SetLocalizationEntry(entries, index++, "build.stats.projectile_speed", "Скорость снаряда: {0:0.#}", "Projectile speed: {0:0.#}");
+            SetLocalizationEntry(entries, index++, "build.stats.boost_radius", "Радиус: {0:0.#}", "Radius: {0:0.#}");
+            SetLocalizationEntry(entries, index++, "build.stats.mining_boost", "+{0:0.#}% к добыче", "+{0:0.#}% mining");
+            SetLocalizationEntry(entries, index++, "build.stats.fire_rate_boost", "+{0:0.#}% к скорострельности", "+{0:0.#}% fire rate");
+            SetLocalizationEntry(entries, index++, "build.stats.summary_mine", "{0}: +{1} минералов / {2:0.#} с", "{0}: +{1} minerals / {2:0.#} s");
+            SetLocalizationEntry(entries, index++, "build.stats.summary_cannon", "{0}: {1} урон, {2:0.#}/с, {3:0.#} дальн.", "{0}: {1} damage, {2:0.#}/s, {3:0.#} range");
+            SetLocalizationEntry(entries, index++, "build.stats.summary_booster", "{0}: радиус {1:0.#}, +{2:0.#}% добыча, +{3:0.#}% скорострельность", "{0}: radius {1:0.#}, +{2:0.#}% mining, +{3:0.#}% fire rate");
             SetLocalizationEntry(entries, index++, "feedback.need_minerals", "Нужно {0} минералов", "Need {0} minerals");
             SetLocalizationEntry(entries, index++, "feedback.cannot_build", "Здесь нельзя строить", "Cannot build here");
             SetLocalizationEntry(entries, index++, "feedback.cannot_upgrade", "Сейчас нельзя улучшить", "Cannot upgrade now");

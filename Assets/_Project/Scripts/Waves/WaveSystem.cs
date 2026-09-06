@@ -13,14 +13,19 @@ namespace OrbitalDefense
         [SerializeField] private Transform planetCenter;
         [SerializeField] private WaveConfig[] waves;
         [SerializeField] private float waveEndDelay = 2f;
+        [SerializeField] private float stageWarningLeadTime = 1f;
 
         private readonly List<Health> aliveEnemies = new();
         private bool spawning;
         private bool completingWave;
         private int currentWaveIndex = -1;
+        private WaveConfig currentWave;
+        private int nextStageIndex = -1;
 
         public event Action<int, int> WaveStarted;
         public event Action<int, int> WaveCompleted;
+        public event Action<float> StageWarningStarted;
+        public event Action StageWarningEnded;
 
         public int CurrentWaveNumber => currentWaveIndex + 1;
         public int TotalWaves => waves != null ? waves.Length : 0;
@@ -64,9 +69,11 @@ namespace OrbitalDefense
             }
 
             currentWaveIndex++;
+            currentWave = waves[currentWaveIndex];
+            nextStageIndex = 0;
             gameState.EnterWave();
             WaveStarted?.Invoke(CurrentWaveNumber, TotalWaves);
-            StartCoroutine(SpawnWave(waves[currentWaveIndex]));
+            StartCoroutine(SpawnWave(currentWave));
         }
 
         private IEnumerator SpawnWave(WaveConfig wave)
@@ -77,7 +84,39 @@ namespace OrbitalDefense
             {
                 for (int i = 0; i < wave.SpawnGroups.Length; i++)
                 {
+                    if (gameState != null && gameState.IsGameOver)
+                    {
+                        break;
+                    }
+
                     EnemySpawnGroup group = wave.SpawnGroups[i];
+                    if (group == null)
+                    {
+                        nextStageIndex = i + 1;
+                        continue;
+                    }
+
+                    if (i > 0)
+                    {
+                        if (TryGetStageDirection(wave, i, out float warningAngle))
+                        {
+                            nextStageIndex = i;
+                            StageWarningStarted?.Invoke(warningAngle);
+                            yield return new WaitForSeconds(stageWarningLeadTime);
+                            StageWarningEnded?.Invoke();
+                        }
+                        else
+                        {
+                            StageWarningEnded?.Invoke();
+                        }
+
+                        if (gameState != null && gameState.IsGameOver)
+                        {
+                            break;
+                        }
+                    }
+
+                    nextStageIndex = i + 1;
                     for (int j = 0; j < group.Count; j++)
                     {
                         SpawnEnemy(wave, group);
@@ -87,6 +126,8 @@ namespace OrbitalDefense
             }
 
             spawning = false;
+            nextStageIndex = -1;
+            StageWarningEnded?.Invoke();
         }
 
         private void SpawnEnemy(WaveConfig wave, EnemySpawnGroup group)
@@ -119,6 +160,8 @@ namespace OrbitalDefense
 
         private void CompleteWave()
         {
+            StageWarningEnded?.Invoke();
+
             foreach (Projectile projectile in FindObjectsByType<Projectile>(FindObjectsSortMode.None))
             {
                 Destroy(projectile.gameObject);
@@ -142,6 +185,55 @@ namespace OrbitalDefense
             }
 
             gameState.EnterUpgradeChoice();
+        }
+
+        public bool TryGetNextWaveDirection(out float angleDegrees)
+        {
+            return TryGetWaveDirection(currentWaveIndex + 1, out angleDegrees);
+        }
+
+        public bool TryGetCurrentOrNextStageDirection(out float angleDegrees)
+        {
+            if (gameState != null && gameState.IsWaveActive && currentWave != null && nextStageIndex >= 0)
+            {
+                return TryGetStageDirection(currentWave, nextStageIndex, out angleDegrees);
+            }
+
+            return TryGetNextWaveDirection(out angleDegrees);
+        }
+
+        private bool TryGetWaveDirection(int waveIndex, out float angleDegrees)
+        {
+            angleDegrees = 0f;
+
+            if (waves == null || waveIndex < 0 || waveIndex >= waves.Length)
+            {
+                return false;
+            }
+
+            return TryGetStageDirection(waves[waveIndex], 0, out angleDegrees);
+        }
+
+        private static bool TryGetStageDirection(WaveConfig wave, int startIndex, out float angleDegrees)
+        {
+            angleDegrees = 0f;
+
+            if (wave == null || wave.SpawnGroups == null || startIndex < 0)
+            {
+                return false;
+            }
+
+            for (int i = startIndex; i < wave.SpawnGroups.Length; i++)
+            {
+                EnemySpawnGroup group = wave.SpawnGroups[i];
+                if (group != null && group.Count > 0)
+                {
+                    angleDegrees = group.AngleDegrees;
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

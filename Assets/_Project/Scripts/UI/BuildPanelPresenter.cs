@@ -1,3 +1,4 @@
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -13,6 +14,7 @@ namespace OrbitalDefense
         [SerializeField] private LocalizationService localization;
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private TMP_Text selectedSlotText;
+        [SerializeField] private TMP_Text statsText;
         [SerializeField] private Button mineButton;
         [SerializeField] private Button cannonButton;
         [SerializeField] private Button boosterButton;
@@ -191,6 +193,7 @@ namespace OrbitalDefense
                 selectedSlotText.text = GetSelectedSlotText();
             }
 
+            RefreshStatsText();
             RefreshButton(mineButton, BuildingKind.Mine);
             RefreshButton(cannonButton, BuildingKind.Cannon);
             RefreshButton(boosterButton, BuildingKind.OrbitalBooster);
@@ -301,6 +304,139 @@ namespace OrbitalDefense
             }
 
             rangePreview.Hide();
+        }
+
+        private void RefreshStatsText()
+        {
+            if (statsText == null)
+            {
+                return;
+            }
+
+            statsText.text = GetStatsText();
+        }
+
+        private string GetStatsText()
+        {
+            if (selectedSlot == null)
+            {
+                return Text("build.stats.empty");
+            }
+
+            Building building = selectedSlot.CurrentBuilding;
+            if (building != null && building.Config != null)
+            {
+                return BuildBuildingStats(building.Config, building.Level);
+            }
+
+            return BuildAvailableStats();
+        }
+
+        private string BuildAvailableStats()
+        {
+            if (catalog == null || catalog.Buildings == null || selectedSlot == null)
+            {
+                return Text("build.stats.none");
+            }
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine(Text("build.stats.available"));
+
+            bool wroteAny = false;
+            for (int i = 0; i < catalog.Buildings.Length; i++)
+            {
+                BuildingConfig config = catalog.Buildings[i];
+                if (config == null || !selectedSlot.CanAccept(config))
+                {
+                    continue;
+                }
+
+                if (wroteAny)
+                {
+                    builder.AppendLine();
+                }
+
+                AppendBuildingSummary(builder, config);
+                wroteAny = true;
+            }
+
+            if (!wroteAny)
+            {
+                return Text("build.stats.none");
+            }
+
+            return builder.ToString().TrimEnd();
+        }
+
+        private string BuildBuildingStats(BuildingConfig config, int level)
+        {
+            StringBuilder builder = new StringBuilder();
+            AppendBuildingStats(builder, config, level);
+            return builder.ToString().TrimEnd();
+        }
+
+        private void AppendBuildingStats(StringBuilder builder, BuildingConfig config, int level)
+        {
+            if (builder == null || config == null)
+            {
+                return;
+            }
+
+            string name = Localize(config.DisplayNameKey, config.DisplayName);
+            builder.AppendLine(name);
+            builder.AppendLine(Text("build.stats.level", level, config.MaxLevel));
+
+            switch (config.Kind)
+            {
+                case BuildingKind.Mine:
+                    int production = Mathf.RoundToInt(config.ProductionAmount * GetLevelMultiplier(level));
+                    float interval = Mathf.Max(0.1f, config.ProductionInterval);
+                    builder.AppendLine(Text("build.stats.production", production, interval));
+                    break;
+                case BuildingKind.Cannon:
+                    int damage = Mathf.RoundToInt(config.Damage * GetLevelMultiplier(level));
+                    float fireRate = config.FireRate;
+                    float range = config.Range * GetLevelMultiplier(level);
+                    float projectileSpeed = config.ProjectileSpeed;
+                    builder.AppendLine(Text("build.stats.damage", damage));
+                    builder.AppendLine(Text("build.stats.fire_rate", fireRate));
+                    builder.AppendLine(Text("build.stats.range", range));
+                    builder.AppendLine(Text("build.stats.projectile_speed", projectileSpeed));
+                    break;
+                case BuildingKind.OrbitalBooster:
+                    float boostRadius = config.BoostRadius * GetLevelMultiplier(level);
+                    builder.AppendLine(Text("build.stats.boost_radius", boostRadius));
+                    builder.AppendLine(Text("build.stats.mining_boost", config.MiningBoostPercent));
+                    builder.AppendLine(Text("build.stats.fire_rate_boost", config.FireRateBoostPercent));
+                    break;
+            }
+        }
+
+        private void AppendBuildingSummary(StringBuilder builder, BuildingConfig config)
+        {
+            if (builder == null || config == null)
+            {
+                return;
+            }
+
+            string name = Localize(config.DisplayNameKey, config.DisplayName);
+            switch (config.Kind)
+            {
+                case BuildingKind.Mine:
+                    builder.AppendLine(Text("build.stats.summary_mine", name, config.ProductionAmount, config.ProductionInterval));
+                    break;
+                case BuildingKind.Cannon:
+                    builder.AppendLine(Text("build.stats.summary_cannon", name, config.Damage, config.FireRate, config.Range));
+                    break;
+                case BuildingKind.OrbitalBooster:
+                    builder.AppendLine(Text("build.stats.summary_booster", name, config.BoostRadius, config.MiningBoostPercent, config.FireRateBoostPercent));
+                    break;
+            }
+        }
+
+        private static float GetLevelMultiplier(int level)
+        {
+            return 1f + Mathf.Max(0, level - 1) * 0.25f;
         }
 
         private string GetSelectedSlotText()
