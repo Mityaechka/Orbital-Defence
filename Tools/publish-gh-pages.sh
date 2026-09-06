@@ -5,7 +5,7 @@ ROOT="$(git rev-parse --show-toplevel)"
 UNITY_BIN="${UNITY_BIN:-unity}"
 UNITY_TIMEOUT="${UNITY_TIMEOUT:-1200}"
 BUILD_OUTPUT="${BUILD_OUTPUT:-$ROOT/Builds/WebPlaytest}"
-BUILD_METHOD="${BUILD_METHOD:-OrbitalDefense.EditorTools.WebPlaytestBuilder.Build}"
+BUILD_COMMAND="${BUILD_COMMAND:-orbital_defense_build_web_playtest}"
 REMOTE="${REMOTE:-origin}"
 PAGES_BRANCH="${PAGES_BRANCH:-gh-pages}"
 CNAME_SOURCE="${CNAME_SOURCE:-$ROOT/CNAME}"
@@ -38,13 +38,11 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Building WebGL player into $BUILD_OUTPUT"
-"$UNITY_BIN" build "$ROOT" \
-  --target WebGL \
-  --execute-method "$BUILD_METHOD" \
-  --output-path "$BUILD_OUTPUT" \
-  --allow-dirty-build \
+"$UNITY_BIN" run "$ROOT" \
+  --command "$BUILD_COMMAND" \
   --timeout "$UNITY_TIMEOUT" \
-  --format json
+  --format json \
+  -- --outputPath "$BUILD_OUTPUT"
 
 if git show-ref --verify --quiet "refs/heads/$PAGES_BRANCH"; then
   git worktree add --force "$PUBLISH_WORKTREE" "$PAGES_BRANCH" >/dev/null
@@ -58,7 +56,7 @@ WORKTREE_READY=1
 
 # Replace the branch contents with the fresh build output.
 find "$PUBLISH_WORKTREE" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-rsync -a --delete "$BUILD_OUTPUT"/ "$PUBLISH_WORKTREE"/
+rsync -a --delete --exclude .git "$BUILD_OUTPUT"/ "$PUBLISH_WORKTREE"/
 touch "$PUBLISH_WORKTREE/.nojekyll"
 
 if [[ -f "$CNAME_SOURCE" ]]; then

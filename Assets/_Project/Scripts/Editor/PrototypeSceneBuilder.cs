@@ -92,7 +92,7 @@ namespace OrbitalDefense.EditorTools
             AudioSource audioSource = bootstrap.GetComponent<AudioSource>();
 
             GameObject world = new GameObject("GameWorld");
-            Transform planetCenter = CreateWorld(world.transform, worldConfig, planetSprite, moonSprite, slotSprite, commandCoreSprite, commandCoreGlowSprite, projectilePrefab, coreIntegrity, wallet, waveSystem, out CommandCoreSelector coreSelector, out CommandCoreUpgrade coreUpgrade);
+            Transform planetCenter = CreateWorld(world.transform, worldConfig, planetSprite, moonSprite, slotSprite, commandCoreSprite, commandCoreGlowSprite, projectilePrefab, coreIntegrity, wallet, waveSystem, gameState, out CommandCoreSelector coreSelector, out CommandCoreUpgrade coreUpgrade, out OrbitalSetupController orbitalSetupController);
             RangePreview rangePreview = CreateRangePreview(world.transform);
             CreateGameplayUi(catalog, buildSystem, gameState, wallet, coreIntegrity, timeScaleController, localization, waveSystem, upgradeSystem, upgrades, coreSelector, rangePreview);
 
@@ -111,6 +111,7 @@ namespace OrbitalDefense.EditorTools
             SetObject(waveSystem, "wallet", wallet);
             SetObject(waveSystem, "coreIntegrity", coreIntegrity);
             SetObject(waveSystem, "planetCenter", planetCenter);
+            SetObject(waveSystem, "orbitalSetupController", orbitalSetupController);
             SetObjectArray(waveSystem, "waves", waves);
             SetObject(upgradeSystem, "gameState", gameState);
             SetObject(upgradeSystem, "coreIntegrity", coreIntegrity);
@@ -164,7 +165,7 @@ namespace OrbitalDefense.EditorTools
             return moons != null ? moons.arraySize : 0;
         }
 
-        private static Transform CreateWorld(Transform parent, WorldConfig worldConfig, Sprite planetSprite, Sprite moonSprite, Sprite slotSprite, Sprite commandCoreSprite, Sprite commandCoreGlowSprite, Projectile projectilePrefab, CoreIntegrity coreIntegrity, ResourceWallet wallet, WaveSystem waveSystem, out CommandCoreSelector coreSelector, out CommandCoreUpgrade coreUpgrade)
+        private static Transform CreateWorld(Transform parent, WorldConfig worldConfig, Sprite planetSprite, Sprite moonSprite, Sprite slotSprite, Sprite commandCoreSprite, Sprite commandCoreGlowSprite, Projectile projectilePrefab, CoreIntegrity coreIntegrity, ResourceWallet wallet, WaveSystem waveSystem, GameStateController gameState, out CommandCoreSelector coreSelector, out CommandCoreUpgrade coreUpgrade, out OrbitalSetupController orbitalSetupController)
         {
             GameObject planet = CreateSpriteObject("Planet", parent, planetSprite, new Vector3(2.25f, 2.25f, 1f), 0);
             planet.transform.position = Vector3.zero;
@@ -174,6 +175,11 @@ namespace OrbitalDefense.EditorTools
             planetCenter.transform.SetParent(planet.transform, false);
             Transform commandCore = CreateCommandCore(planet.transform, commandCoreSprite, commandCoreGlowSprite, projectilePrefab, coreIntegrity, wallet, waveSystem, out coreSelector, out coreUpgrade);
 
+            GameObject orbitalSetupGo = new GameObject("OrbitalSetupController", typeof(OrbitalSetupController));
+            orbitalSetupGo.transform.SetParent(parent, false);
+            orbitalSetupController = orbitalSetupGo.GetComponent<OrbitalSetupController>();
+            SetObject(orbitalSetupController, "gameState", gameState);
+
             GameObject moonsRoot = new GameObject("Moons", typeof(MoonSpawner));
             moonsRoot.transform.SetParent(parent, false);
             MoonSpawner spawner = moonsRoot.GetComponent<MoonSpawner>();
@@ -181,6 +187,7 @@ namespace OrbitalDefense.EditorTools
             SetObject(spawner, "orbitCenter", planet.transform);
             SetObject(spawner, "moonSprite", moonSprite);
             SetObject(spawner, "slotSprite", slotSprite);
+            SetObject(spawner, "orbitalSetupController", orbitalSetupController);
             spawner.Rebuild();
 
             return commandCore != null ? commandCore : planetCenter.transform;

@@ -13,10 +13,12 @@ namespace OrbitalDefense.EditorTools
         private const string MainScenePath = "Assets/_Project/Scenes/MainGameplay.unity";
 
         [CliCommand("orbital_defense_build_web_playtest", "Build the Orbital Defense WebGL playtest", MainThreadRequired = true)]
-        public static string BuildWebPlaytest()
+        public static string BuildWebPlaytest(
+            [CliArg("outputPath", "Output directory for the WebGL build", Required = false)] string outputPath = null)
         {
-            string outputPath = Build(DefaultOutputPath);
-            return $"Created WebGL playtest build at {outputPath}.";
+            string resolvedOutputPath = string.IsNullOrWhiteSpace(outputPath) ? DefaultOutputPath : outputPath;
+            string builtPath = Build(resolvedOutputPath);
+            return $"Created WebGL playtest build at {builtPath}.";
         }
 
         public static void Build()

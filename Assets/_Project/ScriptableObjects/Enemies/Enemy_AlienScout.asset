@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OrbitalDefense.EnemyConfig
   id: AlienScout
   displayName: Alien Scout
-  prefab: {fileID: 2352878412551985259, guid: 7ef9dcbba991641528ee45aa9ac9fc2b, type: 3}
+  prefab: {fileID: 5295359095050628357, guid: 7ef9dcbba991641528ee45aa9ac9fc2b, type: 3}
   health: 35
   speed: 1.4
   coreDamage: 12

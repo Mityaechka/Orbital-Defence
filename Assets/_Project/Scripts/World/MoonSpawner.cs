@@ -12,10 +12,12 @@ namespace OrbitalDefense
         [SerializeField] private Transform orbitCenter;
         [SerializeField] private Sprite moonSprite;
         [SerializeField] private Sprite slotSprite;
+        [SerializeField] private OrbitalSetupController orbitalSetupController;
 
         private void OnEnable()
         {
             WorldConfig.Changed += OnWorldConfigChanged;
+            orbitalSetupController ??= FindFirstObjectByType<OrbitalSetupController>();
             Rebuild();
         }
 
@@ -73,6 +75,8 @@ namespace OrbitalDefense
                 orbitCenter = transform;
             }
 
+            orbitalSetupController ??= FindFirstObjectByType<OrbitalSetupController>();
+
             ClearChildren();
 
             if (worldConfig == null)
@@ -113,14 +117,20 @@ namespace OrbitalDefense
             ring.transform.position = orbitCenter.position;
             ring.GetComponent<OrbitRingRenderer>().Initialize(config.OrbitRadius, config.OrbitRingColor);
 
-            GameObject moon = new GameObject(objectName, typeof(SpriteRenderer));
+            GameObject moon = new GameObject(objectName, typeof(SpriteRenderer), typeof(CircleCollider2D));
             moon.transform.SetParent(transform, false);
             moon.transform.localScale = config.Scale;
             SpriteRenderer renderer = moon.GetComponent<SpriteRenderer>();
             renderer.sprite = moonSprite;
             renderer.sortingOrder = 1;
+            CircleCollider2D moonCollider = moon.GetComponent<CircleCollider2D>();
+            moonCollider.radius = 0.55f;
 
-            moon.AddComponent<OrbitMover>().Initialize(orbitCenter, config.OrbitRadius, config.OrbitDegreesPerSecond, config.StartAngleDegrees);
+            OrbitMover orbitMover = moon.AddComponent<OrbitMover>();
+            orbitMover.Initialize(orbitCenter, config.OrbitRadius, config.OrbitDegreesPerSecond, config.StartAngleDegrees);
+            orbitalSetupController?.RegisterMoon(orbitMover);
+            moon.AddComponent<OrbitalSetupInput>();
+            moon.AddComponent<OrbitalMoonSelectionFeedback>();
             moon.AddComponent<SelfRotator>().Initialize(config.SelfRotationDegreesPerSecond);
 
             SpawnSurfaceSlots(moon.transform, objectName, config);

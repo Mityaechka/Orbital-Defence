@@ -175,7 +175,7 @@ namespace OrbitalDefense
 
             if (startWaveButton != null)
             {
-                startWaveButton.gameObject.SetActive(phase != GamePhase.Wave);
+                RefreshStartWaveButton(phase);
             }
         }
 
@@ -193,6 +193,8 @@ namespace OrbitalDefense
             {
                 waveText.text = Text("hud.wave", waveSystem.CurrentWaveNumber, waveSystem.TotalWaves);
             }
+
+            RefreshStartWaveButton(gameState != null ? gameState.CurrentPhase : GamePhase.BuildPhase);
         }
 
         private void UpdateWave(int _, int __)
@@ -216,6 +218,18 @@ namespace OrbitalDefense
                 GamePhase.Defeat => "phase.defeat",
                 _ => "phase.boot"
             };
+        }
+
+        private void RefreshStartWaveButton(GamePhase phase)
+        {
+            if (startWaveButton == null)
+            {
+                return;
+            }
+
+            bool shouldShow = phase == GamePhase.BuildPhase;
+            startWaveButton.gameObject.SetActive(shouldShow);
+            startWaveButton.interactable = shouldShow && waveSystem != null && waveSystem.CanStartNextWave;
         }
 
         private static void SetButtonLabel(Button button, string label)

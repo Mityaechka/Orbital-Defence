@@ -103,7 +103,7 @@ namespace OrbitalDefense
                 return;
             }
 
-            HideImmediate();
+            RefreshForPhase(gameState != null ? gameState.CurrentPhase : GamePhase.BuildPhase);
         }
 
         private void RefreshForPhase(GamePhase phase)
@@ -114,13 +114,7 @@ namespace OrbitalDefense
                 return;
             }
 
-            if (phase == GamePhase.Wave)
-            {
-                HideImmediate();
-                return;
-            }
-
-            if (waveSystem != null && waveSystem.TryGetNextWaveDirection(out float nextAngle))
+            if (waveSystem != null && waveSystem.TryGetCurrentOrNextStageDirection(out float nextAngle))
             {
                 Show(nextAngle);
                 return;
@@ -137,6 +131,7 @@ namespace OrbitalDefense
             if (warningText != null)
             {
                 warningText.text = "!";
+                warningText.gameObject.SetActive(true);
             }
 
             UpdatePosition();
@@ -160,7 +155,7 @@ namespace OrbitalDefense
         private void UpdatePosition()
         {
             Canvas canvas = GetComponentInParent<Canvas>();
-            if (canvas == null)
+            if (canvas == null || warningRect == null)
             {
                 return;
             }
@@ -171,7 +166,7 @@ namespace OrbitalDefense
                 return;
             }
 
-            Vector2 direction = new Vector2(Mathf.Cos(angleDegrees * Mathf.Deg2Rad), Mathf.Sin(angleDegrees * Mathf.Deg2Rad));
+            Vector2 direction = new(Mathf.Cos(angleDegrees * Mathf.Deg2Rad), Mathf.Sin(angleDegrees * Mathf.Deg2Rad));
             float radius = Mathf.Min(canvasRect.rect.width, canvasRect.rect.height) * edgeRadiusFactor;
             warningRect.anchoredPosition = direction * radius;
         }

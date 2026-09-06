@@ -11,6 +11,7 @@ namespace OrbitalDefense
         [SerializeField] private ResourceWallet wallet;
         [SerializeField] private CoreIntegrity coreIntegrity;
         [SerializeField] private Transform planetCenter;
+        [SerializeField] private OrbitalSetupController orbitalSetupController;
         [SerializeField] private WaveConfig[] waves;
         [SerializeField] private float waveEndDelay = 2f;
         [SerializeField] private float stageWarningLeadTime = 1f;
@@ -29,12 +30,27 @@ namespace OrbitalDefense
 
         public int CurrentWaveNumber => currentWaveIndex + 1;
         public int TotalWaves => waves != null ? waves.Length : 0;
+        public bool CanStartNextWave =>
+            gameState != null
+            && gameState.CurrentPhase == GamePhase.BuildPhase
+            && !spawning
+            && NextWaveConfig != null
+            && (orbitalSetupController == null || orbitalSetupController.IsReadyForWave);
+        public WaveConfig NextWaveConfig
+        {
+            get
+            {
+                int nextWaveIndex = currentWaveIndex + 1;
+                return waves != null && nextWaveIndex >= 0 && nextWaveIndex < waves.Length ? waves[nextWaveIndex] : null;
+            }
+        }
 
         private void Awake()
         {
             gameState ??= FindFirstObjectByType<GameStateController>();
             wallet ??= FindFirstObjectByType<ResourceWallet>();
             coreIntegrity ??= FindFirstObjectByType<CoreIntegrity>();
+            orbitalSetupController ??= FindFirstObjectByType<OrbitalSetupController>();
         }
 
         private void Update()
@@ -65,6 +81,11 @@ namespace OrbitalDefense
             if (waves == null || currentWaveIndex + 1 >= waves.Length)
             {
                 gameState.EnterVictory();
+                return;
+            }
+
+            if (!CanStartNextWave || (orbitalSetupController != null && !orbitalSetupController.LockForWave()))
+            {
                 return;
             }
 

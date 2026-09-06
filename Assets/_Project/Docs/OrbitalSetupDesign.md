@@ -247,3 +247,352 @@ These decisions should be made after the base slice is playable:
 - whether coverage depends only on cannon range or also on moon-specific firing arcs;
 - whether special waves are allowed to change direction after a warning.
 
+## Systems And Code Changes
+
+### `OrbitMover`
+
+File: `Assets/_Project/Scripts/Orbits/OrbitMover.cs`
+
+The current component moves a moon automatically every frame. This must change: gameplay-relevant moon movement is player-controlled during `BuildPhase` and locked during `Wave`.
+
+Add:
+
+- `SetAngle(float angleDegrees)`;
+- `RotateBy(float deltaDegrees)`;
+- `ResetAngle()`;
+- `LockPosition()` and `UnlockPosition()`;
+- `IsLocked` state;
+- `AngleChanged` event;
+- angle normalization to `0..360` degrees.
+
+The existing automatic `Update()` movement should no longer change the gameplay position. Cosmetic moon rotation may remain separate from orbital position.
+
+Suggested API:
+
+```csharp
+public float CurrentAngleDegrees { get; private set; }
+public bool IsLocked { get; private set; }
+
+public void SetAngle(float angleDegrees);
+public void RotateBy(float deltaDegrees);
+public void ResetAngle();
+public void LockPosition();
+public void UnlockPosition();
+```
+
+### New `OrbitalSetupController`
+
+File: `Assets/_Project/Scripts/Orbits/OrbitalSetupController.cs`
+
+This controller coordinates all moons and owns the setup lifecycle. It should not know about UI visuals.
+
+Responsibilities:
+
+- register all spawned moons;
+- keep the current and previous angles;
+- allow repositioning only in `BuildPhase`;
+- reset changes made during the current setup;
+- lock both moons for the active wave;
+- unlock them after the wave ends;
+- expose setup readiness and change events.
+
+Suggested API:
+
+```csharp
+public bool CanReposition { get; }
+public bool IsReadyForWave { get; }
+
+public void RegisterMoon(OrbitMover mover, int index, string displayName);
+public void BeginSetup();
+public void ResetPositions();
+public void LockForWave();
+public void UnlockAfterWave();
+public bool TrySetMoonAngle(int moonIndex, float angleDegrees);
+public bool TryRotateMoon(int moonIndex, float deltaDegrees);
+```
+
+### `GameStateController`
+
+File: `Assets/_Project/Scripts/Core/GameStateController.cs`
+
+No new game phase is required for the first implementation. `BuildPhase` includes both construction and orbital setup.
+
+Optionally add:
+
+```csharp
+public bool CanConfigureOrbit => CurrentPhase == GamePhase.BuildPhase;
+```
+
+Expected permissions:
+
+| Game phase | Build | Move moons | Lock setup |
+| --- | --- | --- | --- |
+| `BuildPhase` | yes | yes | yes |
+| `Wave` | no | no | no |
+| `UpgradeChoice` | no | no | no |
+| `Victory` / `Defeat` | no | no | no |
+
+### `WaveSystem`
+
+File: `Assets/_Project/Scripts/Waves/WaveSystem.cs`
+
+`StartNextWave()` must verify and lock the orbital setup before entering `Wave`.
+
+Required flow:
+
+1. check `OrbitalSetupController.IsReadyForWave`;
+2. capture the two current moon angles;
+3. call `LockForWave()`;
+4. enter `GamePhase.Wave`;
+5. spawn the wave using the locked setup;
+6. unlock the moons after wave completion.
+
+The current `WaveConfig` direction data should remain the source for the forecast. Do not duplicate wave angles in UI objects.
+
+Add read-only forecast accessors such as:
+
+```csharp
+public WaveConfig GetNextWave();
+public IReadOnlyList<WaveStageForecast> GetNextWaveForecast();
+```
+
+### `MoonSpawner`
+
+File: `Assets/_Project/Scripts/World/MoonSpawner.cs`
+
+When a moon is created, keep the `OrbitMover` reference and register it with `OrbitalSetupController`.
+
+The existing hierarchy already solves building movement:
+
+```text
+Moon
+└── SurfaceSlots
+    └── BuildSlot
+        └── Building
+```
+
+Moving the moon therefore moves its slots and buildings without changes to building placement.
+
+### Input
+
+New file: `Assets/_Project/Scripts/Input/OrbitalSetupInput.cs`
+
+This component translates mouse or touch input into controller calls.
+
+Required input:
+
+- select a moon;
+- drag the moon around the planet;
+- rotate by fixed steps, initially `15` or `30` degrees;
+- reset the current setup;
+- prevent input outside `BuildPhase`.
+
+Input must call `OrbitalSetupController`, not modify `Transform` or `CurrentAngleDegrees` directly.
+
+### Coverage Calculation
+
+New file: `Assets/_Project/Scripts/Orbits/OrbitalCoverageCalculator.cs`
+
+This system evaluates how well the current moon and cannon layout covers the next wave.
+
+Inputs:
+
+- moon positions;
+- build slots and cannon positions;
+- cannon range;
+- next wave spawn groups;
+- group angle and angle spread.
+
+Outputs:
+
+- covered or uncovered sectors;
+- coverage percentage;
+- responsible cannon for a sector;
+- high-risk gaps.
+
+The first implementation may use a simplified test: a cannon covers a sector when the sector trajectory falls within its range. More accurate interception timing can be added after the mechanic is playable.
+
+### `WaveDirectionWarningPresenter`
+
+File: `Assets/_Project/Scripts/UI/WaveDirectionWarningPresenter.cs`
+
+The current warning shows a single `!` and direction. Extend it to display the next-wave forecast:
+
+- attack directions;
+- enemy group counts;
+- trajectory sectors;
+- special wave rule;
+- coverage warnings.
+
+The existing active-wave warning can remain; the new forecast is shown during `BuildPhase`.
+
+### New `OrbitalSetupPresenter`
+
+File: `Assets/_Project/Scripts/UI/OrbitalSetupPresenter.cs`
+
+Responsibilities:
+
+- show the selected moon;
+- display its angle and name;
+- expose rotate controls;
+- provide `Reset`;
+- provide `Lock Orbits` and/or `Start Wave`;
+- show `Configuring`, `Ready`, and `Locked` states;
+- display coverage feedback from `OrbitalCoverageCalculator`.
+
+The first UI can combine lock and start into one action, but the code should keep separate methods:
+
+```csharp
+public void OnLockOrbitsClicked();
+public void OnStartWaveClicked();
+```
+
+### `GameplayHudPresenter`
+
+File: `Assets/_Project/Scripts/UI/GameplayHudPresenter.cs`
+
+The existing start button currently calls `WaveSystem.StartNextWave()` directly. It must first commit the orbital setup or delegate that action to `OrbitalSetupPresenter`.
+
+Preferred code separation:
+
+```text
+Lock Orbits -> OrbitalSetupController.LockForWave()
+Start Wave   -> WaveSystem.StartNextWave()
+```
+
+For the first slice these can share one visible button while remaining separate methods internally.
+
+### `BuildSystem`, `BuildSlot`, and `Building`
+
+Files:
+
+- `Assets/_Project/Scripts/Buildings/BuildSystem.cs`;
+- `Assets/_Project/Scripts/Slots/BuildSlot.cs`;
+- `Assets/_Project/Scripts/Buildings/Building.cs`.
+
+No major changes are needed. The existing parent hierarchy makes slots and buildings follow the moon automatically. Existing `CanBuild` checks already prevent building, selling, and upgrading during the wave.
+
+Only add a setup-lock check if `Lock Orbits` is implemented as a separate state inside `BuildPhase`.
+
+### `GameBootstrap`
+
+File: `Assets/_Project/Scripts/Bootstrap/GameBootstrap.cs`
+
+Changes should be minimal:
+
+- find or receive `OrbitalSetupController`;
+- enable repositioning in `BuildPhase`;
+- disable repositioning in `Wave`, `UpgradeChoice`, `Victory`, and `Defeat`;
+- keep current pause behavior between waves.
+
+Manual drag should not depend on `Time.timeScale`; use unscaled input timing where smooth movement is needed.
+
+### `PrototypeSceneBuilder`
+
+File: `Assets/_Project/Scripts/Editor/PrototypeSceneBuilder.cs`
+
+Because the gameplay scene is generated, the builder must create and wire:
+
+- `OrbitalSetupController`;
+- orbital input component;
+- coverage calculator;
+- setup presenter;
+- reset, lock, and start controls;
+- forecast UI;
+- localization keys.
+
+Otherwise a regenerated prototype scene will lose the new references.
+
+### Systems Not Directly Changed
+
+The first implementation should not modify:
+
+- `EnemyMover`;
+- `EnemyReward`;
+- `CoreIntegrity`;
+- `TurretWeapon`;
+- `Projectile`;
+- `MineProducer`;
+- `UpgradeSystem`;
+- `UpgradePanelPresenter`;
+- `CommandCoreUpgrade`.
+
+Roguelite upgrades that modify orbital rules can be added later through `UpgradeSystem` and `RunModifiers`.
+
+## Implementation Sequence
+
+### Step 1: Controlled moons
+
+- change `OrbitMover` to support manual angle changes;
+- add `OrbitalSetupController`;
+- register spawned moons from `MoonSpawner`;
+- verify that slots and buildings follow moons.
+
+### Step 2: Player input
+
+- add `OrbitalSetupInput`;
+- implement moon selection and drag;
+- add fixed-angle controls;
+- add reset behavior.
+
+### Step 3: Wave locking
+
+- update `WaveSystem` to lock before spawning;
+- prevent orbital movement during `Wave`;
+- unlock after completion, defeat, or restart;
+- add tests for phase permissions.
+
+### Step 4: Forecast and coverage
+
+- add `OrbitalCoverageCalculator`;
+- extend the wave forecast presenter;
+- add visual sectors, ranges, and uncovered warnings;
+- expose lock/readiness state in the HUD.
+
+### Step 5: Generated scene wiring
+
+- update `PrototypeSceneBuilder`;
+- add localization entries;
+- regenerate `MainGameplay`;
+- verify the generated scene from a clean rebuild.
+
+### Step 6: Balance and playtest
+
+- tune snap angle and drag sensitivity;
+- create waves where repositioning matters;
+- ensure at least two viable layouts exist;
+- verify that every leak can be explained from the locked layout;
+- test desktop mouse and mobile touch input.
+
+## Recommended New Files
+
+```text
+Assets/_Project/Scripts/Orbits/OrbitalSetupController.cs
+Assets/_Project/Scripts/Input/OrbitalSetupInput.cs
+Assets/_Project/Scripts/Orbits/OrbitalCoverageCalculator.cs
+Assets/_Project/Scripts/UI/OrbitalSetupPresenter.cs
+```
+
+## Architecture Boundary
+
+Keep responsibilities separated:
+
+```text
+GameStateController
+    -> OrbitalSetupController
+        -> OrbitMover
+
+WaveSystem
+    -> wave forecast data
+
+OrbitalCoverageCalculator
+    -> coverage result
+
+OrbitalSetupInput
+    -> OrbitalSetupController
+
+OrbitalSetupPresenter
+    -> displays state and calls controller actions
+```
+
+The orbital gameplay system must not depend on UI classes, and the UI must not manipulate moon transforms directly.

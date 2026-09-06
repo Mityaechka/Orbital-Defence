@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace OrbitalDefense
@@ -9,35 +10,80 @@ namespace OrbitalDefense
         [SerializeField] private float degreesPerSecond = 20f;
         [SerializeField] private float startAngleDegrees;
 
+        public event Action<float> AngleChanged;
+
         public float CurrentAngleDegrees { get; private set; }
+        public float StartAngleDegrees => startAngleDegrees;
+        public Transform Center => center;
+        public bool IsLocked { get; private set; }
 
         public void Initialize(Transform orbitCenter, float orbitRadius, float degreesPerSecond, float startAngleDegrees)
         {
             center = orbitCenter;
             radius = orbitRadius;
             this.degreesPerSecond = degreesPerSecond;
-            this.startAngleDegrees = startAngleDegrees;
-            CurrentAngleDegrees = startAngleDegrees;
-            ApplyPosition();
+            this.startAngleDegrees = NormalizeAngle(startAngleDegrees);
+            IsLocked = false;
+            SetAngleInternal(this.startAngleDegrees, false);
         }
 
         private void Awake()
         {
+            startAngleDegrees = NormalizeAngle(startAngleDegrees);
             CurrentAngleDegrees = startAngleDegrees;
+            ApplyPosition();
         }
 
-        private void Update()
+        public void SetAngle(float angleDegrees)
         {
-            CurrentAngleDegrees += degreesPerSecond * Time.deltaTime;
-            ApplyPosition();
+            if (IsLocked)
+            {
+                return;
+            }
+
+            SetAngleInternal(angleDegrees, true);
+        }
+
+        public void RotateBy(float deltaDegrees)
+        {
+            SetAngle(CurrentAngleDegrees + deltaDegrees);
+        }
+
+        public void ResetAngle()
+        {
+            SetAngle(startAngleDegrees);
+        }
+
+        public void LockPosition()
+        {
+            IsLocked = true;
+        }
+
+        public void UnlockPosition()
+        {
+            IsLocked = false;
         }
 
         private void OnValidate()
         {
+            startAngleDegrees = NormalizeAngle(startAngleDegrees);
+            CurrentAngleDegrees = startAngleDegrees;
             if (!Application.isPlaying)
             {
-                CurrentAngleDegrees = startAngleDegrees;
                 ApplyPosition();
+            }
+        }
+
+        private void SetAngleInternal(float angleDegrees, bool notifyChange)
+        {
+            float normalized = NormalizeAngle(angleDegrees);
+            bool changed = !Mathf.Approximately(CurrentAngleDegrees, normalized);
+            CurrentAngleDegrees = normalized;
+            ApplyPosition();
+
+            if (notifyChange && changed)
+            {
+                AngleChanged?.Invoke(CurrentAngleDegrees);
             }
         }
 
@@ -52,6 +98,10 @@ namespace OrbitalDefense
             Vector3 offset = new Vector3(Mathf.Cos(radians), Mathf.Sin(radians), 0f) * radius;
             transform.position = center.position + offset;
         }
+
+        private static float NormalizeAngle(float angleDegrees)
+        {
+            return Mathf.Repeat(angleDegrees, 360f);
+        }
     }
 }
-
