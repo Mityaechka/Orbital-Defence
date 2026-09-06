@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 550347e013d9241a3b9131cbf6aeff18, type: 3}
+  m_Name: Building_Mine
+  m_EditorClassIdentifier: Assembly-CSharp::OrbitalDefense.BuildingConfig
+  id: Mine
+  displayName: Mine
+  displayNameKey: building.Mine.name
+  kind: 0
+  icon: {fileID: 2727193576502022816, guid: 72ebe405459954d358c85a6484445ea7, type: 3}
+  prefab: {fileID: 4175787546187157534, guid: af3d6966853fa4c69a9bb30ac4164998, type: 3}
+  buildCost: 50
+  maxLevel: 3
+  allowedSlots: 00000000i
+  productionAmount: 10
+  productionInterval: 5
+  damage: 10
+  fireRate: 1
+  range: 3.5
+  projectileSpeed: 6
+  boostRadius: 2
+  miningBoostPercent: 25
+  fireRateBoostPercent: 15
