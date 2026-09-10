@@ -1,7 +1,6 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace OrbitalDefense
 {
@@ -9,47 +8,45 @@ namespace OrbitalDefense
     {
         [SerializeField] private GameStateController gameState;
         [SerializeField] private LocalizationService localization;
-        [SerializeField] private GameObject panelRoot;
-        [SerializeField] private TMP_Text titleText;
-        [SerializeField] private TMP_Text bodyText;
-        [SerializeField] private Button restartButton;
+
+        private UIDocument document;
+        private VisualElement panelRoot;
+        private Label titleText;
+        private Label bodyText;
 
         private void Awake()
         {
             gameState ??= FindFirstObjectByType<GameStateController>();
             localization ??= FindFirstObjectByType<LocalizationService>();
-            panelRoot ??= gameObject;
+            document = FindFirstObjectByType<UIDocument>();
         }
 
         private void OnEnable()
         {
-            if (gameState != null)
-            {
-                gameState.PhaseChanged += HandlePhaseChanged;
-            }
-
-            if (localization != null)
-            {
-                localization.LanguageChanged += RefreshCurrentPhase;
-            }
+            if (gameState != null) gameState.PhaseChanged += HandlePhaseChanged;
+            if (localization != null) localization.LanguageChanged += RefreshCurrentPhase;
         }
 
         private void OnDisable()
         {
-            if (gameState != null)
-            {
-                gameState.PhaseChanged -= HandlePhaseChanged;
-            }
-
-            if (localization != null)
-            {
-                localization.LanguageChanged -= RefreshCurrentPhase;
-            }
+            if (gameState != null) gameState.PhaseChanged -= HandlePhaseChanged;
+            if (localization != null) localization.LanguageChanged -= RefreshCurrentPhase;
         }
 
         private void Start()
         {
+            BindUi();
             HandlePhaseChanged(gameState != null ? gameState.CurrentPhase : GamePhase.BuildPhase);
+        }
+
+        private void BindUi()
+        {
+            if (document == null || document.rootVisualElement == null) return;
+            VisualElement root = document.rootVisualElement;
+            panelRoot = root.Q<VisualElement>("gameover-panel");
+            titleText = root.Q<Label>("gameover-title");
+            bodyText = root.Q<Label>("gameover-body");
+            root.Q<Button>("gameover-restart")?.RegisterCallback<ClickEvent>(_ => Restart());
         }
 
         public void Restart()
@@ -60,46 +57,14 @@ namespace OrbitalDefense
 
         private void HandlePhaseChanged(GamePhase phase)
         {
-            bool isVictory = phase == GamePhase.Victory;
-            bool isDefeat = phase == GamePhase.Defeat;
-            bool isGameOver = isVictory || isDefeat;
-
-            panelRoot.SetActive(isGameOver);
-
-            if (titleText != null)
-            {
-                titleText.text = isVictory ? Text("gameover.victory_title") : isDefeat ? Text("gameover.defeat_title") : string.Empty;
-            }
-
-            if (bodyText != null)
-            {
-                bodyText.text = isVictory ? Text("gameover.victory_body") : isDefeat ? Text("gameover.defeat_body") : string.Empty;
-            }
-
-            if (restartButton != null)
-            {
-                restartButton.interactable = isGameOver;
-                SetButtonLabel(restartButton, Text("button.restart"));
-            }
+            bool visible = phase == GamePhase.Victory || phase == GamePhase.Defeat;
+            if (panelRoot != null) panelRoot.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!visible) return;
+            if (titleText != null) titleText.text = Text(phase == GamePhase.Victory ? "gameover.victory_title" : "gameover.defeat_title");
+            if (bodyText != null) bodyText.text = Text(phase == GamePhase.Victory ? "gameover.victory_body" : "gameover.defeat_body");
         }
 
-        private void RefreshCurrentPhase()
-        {
-            HandlePhaseChanged(gameState != null ? gameState.CurrentPhase : GamePhase.BuildPhase);
-        }
-
-        private string Text(string key, params object[] args)
-        {
-            return localization != null ? localization.Text(key, args) : key;
-        }
-
-        private static void SetButtonLabel(Button button, string label)
-        {
-            TMP_Text text = button != null ? button.GetComponentInChildren<TMP_Text>() : null;
-            if (text != null)
-            {
-                text.text = label;
-            }
-        }
+        private void RefreshCurrentPhase() => HandlePhaseChanged(gameState != null ? gameState.CurrentPhase : GamePhase.BuildPhase);
+        private string Text(string key, params object[] args) => localization != null ? localization.Text(key, args) : key;
     }
 }

@@ -15,7 +15,7 @@ Core idea: the player protects a mining planet from waves of asteroids and alien
 - ECS-like composition using small components.
 - ScriptableObject data for levels, buildings, enemies, waves, upgrades, and time scale.
 - ScriptableObject data for world/moon layout.
-- uGUI + TextMeshPro for UI.
+- UI Toolkit with UXML/USS for runtime UI.
 - PNG sprites with a vector-like 2D mobile visual style.
 - Single-player only.
 - WebGL/Web build support is a playtest target, not the primary shipping target.

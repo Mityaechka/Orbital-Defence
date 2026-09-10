@@ -10,6 +10,10 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UIDocument = UnityEngine.UIElements.UIDocument;
+using VisualTreeAsset = UnityEngine.UIElements.VisualTreeAsset;
+using PanelSettings = UnityEngine.UIElements.PanelSettings;
+using PanelScaleMode = UnityEngine.UIElements.PanelScaleMode;
 
 namespace OrbitalDefense.EditorTools
 {
@@ -94,7 +98,7 @@ namespace OrbitalDefense.EditorTools
             GameObject world = new GameObject("GameWorld");
             Transform planetCenter = CreateWorld(world.transform, worldConfig, planetSprite, moonSprite, slotSprite, commandCoreSprite, commandCoreGlowSprite, projectilePrefab, coreIntegrity, wallet, waveSystem, gameState, out CommandCoreSelector coreSelector, out CommandCoreUpgrade coreUpgrade, out OrbitalSetupController orbitalSetupController);
             RangePreview rangePreview = CreateRangePreview(world.transform);
-            CreateGameplayUi(catalog, buildSystem, gameState, wallet, coreIntegrity, timeScaleController, localization, waveSystem, upgradeSystem, upgrades, coreSelector, rangePreview);
+            CreateGameplayUiToolkit(catalog, buildSystem, gameState, wallet, coreIntegrity, timeScaleController, localization, waveSystem, upgradeSystem, upgrades, coreSelector, rangePreview);
 
             SetObject(gameBootstrap, "gameState", gameState);
             SetObject(gameBootstrap, "coreIntegrity", coreIntegrity);
@@ -221,6 +225,69 @@ namespace OrbitalDefense.EditorTools
             SetObject(visual, "glowRenderer", glow.GetComponent<SpriteRenderer>());
             selector = root.AddComponent<CommandCoreSelector>();
             return root.transform;
+        }
+
+        private static void CreateGameplayUiToolkit(BuildCatalog catalog, BuildSystem buildSystem, GameStateController gameState, ResourceWallet wallet, CoreIntegrity coreIntegrity, TimeScaleController timeScaleController, LocalizationService localization, WaveSystem waveSystem, UpgradeSystem upgradeSystem, UpgradeConfig[] upgrades, CommandCoreSelector coreSelector, RangePreview rangePreview)
+        {
+            const string visualTreePath = "Assets/_Project/UI/GameplayUI.uxml";
+            const string panelSettingsPath = "Assets/_Project/UI/GameplayPanelSettings.asset";
+            VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(visualTreePath);
+            if (visualTree == null)
+            {
+                Debug.LogError($"Missing UI Toolkit document at {visualTreePath}.");
+                return;
+            }
+
+            PanelSettings panelSettings = AssetDatabase.LoadAssetAtPath<PanelSettings>(panelSettingsPath);
+            if (panelSettings == null)
+            {
+                panelSettings = ScriptableObject.CreateInstance<PanelSettings>();
+                AssetDatabase.CreateAsset(panelSettings, panelSettingsPath);
+            }
+            panelSettings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+            panelSettings.referenceResolution = new Vector2Int(1080, 1920);
+            EditorUtility.SetDirty(panelSettings);
+
+            GameObject uiRoot = new GameObject("GameplayUI", typeof(UIDocument));
+            UIDocument document = uiRoot.GetComponent<UIDocument>();
+            document.panelSettings = panelSettings;
+            document.visualTreeAsset = visualTree;
+
+            GameplayHudPresenter hud = uiRoot.AddComponent<GameplayHudPresenter>();
+            BuildPanelPresenter buildPresenter = uiRoot.AddComponent<BuildPanelPresenter>();
+            CommandCorePanelPresenter corePresenter = uiRoot.AddComponent<CommandCorePanelPresenter>();
+            UpgradePanelPresenter upgradePresenter = uiRoot.AddComponent<UpgradePanelPresenter>();
+            GameOverPanelPresenter gameOverPresenter = uiRoot.AddComponent<GameOverPanelPresenter>();
+            WaveDirectionWarningPresenter warningPresenter = uiRoot.AddComponent<WaveDirectionWarningPresenter>();
+
+            SetObject(hud, "wallet", wallet);
+            SetObject(hud, "coreIntegrity", coreIntegrity);
+            SetObject(hud, "gameState", gameState);
+            SetObject(hud, "waveSystem", waveSystem);
+            SetObject(hud, "timeScaleController", timeScaleController);
+            SetObject(hud, "localization", localization);
+            SetObject(buildPresenter, "buildSystem", buildSystem);
+            SetObject(buildPresenter, "catalog", catalog);
+            SetObject(buildPresenter, "localization", localization);
+            SetObject(buildPresenter, "rangePreview", rangePreview);
+            SetObject(corePresenter, "coreIntegrity", coreIntegrity);
+            SetObject(corePresenter, "wallet", wallet);
+            SetObject(corePresenter, "gameState", gameState);
+            SetObject(corePresenter, "localization", localization);
+            SetObject(upgradePresenter, "gameState", gameState);
+            SetObject(upgradePresenter, "upgradeSystem", upgradeSystem);
+            SetObject(upgradePresenter, "localization", localization);
+            SetObject(gameOverPresenter, "gameState", gameState);
+            SetObject(gameOverPresenter, "localization", localization);
+            SetObject(warningPresenter, "gameState", gameState);
+            SetObject(warningPresenter, "waveSystem", waveSystem);
+
+            SetObjectArray(upgradeSystem, "availableUpgrades", upgrades);
+            if (coreSelector != null)
+            {
+                SetObject(coreSelector, "corePanel", corePresenter);
+                SetObject(coreSelector, "buildPanel", buildPresenter);
+            }
         }
 
         private static void CreateGameplayUi(BuildCatalog catalog, BuildSystem buildSystem, GameStateController gameState, ResourceWallet wallet, CoreIntegrity coreIntegrity, TimeScaleController timeScaleController, LocalizationService localization, WaveSystem waveSystem, UpgradeSystem upgradeSystem, UpgradeConfig[] upgrades, CommandCoreSelector coreSelector, RangePreview rangePreview)

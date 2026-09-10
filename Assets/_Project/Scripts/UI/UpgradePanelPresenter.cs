@@ -1,6 +1,5 @@
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace OrbitalDefense
 {
@@ -9,127 +8,82 @@ namespace OrbitalDefense
         [SerializeField] private GameStateController gameState;
         [SerializeField] private UpgradeSystem upgradeSystem;
         [SerializeField] private LocalizationService localization;
-        [SerializeField] private GameObject panelRoot;
-        [SerializeField] private TMP_Text titleText;
-        [SerializeField] private Button[] choiceButtons;
-        [SerializeField] private TMP_Text[] choiceLabels;
+
+        private UIDocument document;
+        private VisualElement panelRoot;
+        private Label titleText;
+        private Button[] choiceButtons;
 
         private void Awake()
         {
             gameState ??= FindFirstObjectByType<GameStateController>();
             upgradeSystem ??= FindFirstObjectByType<UpgradeSystem>();
             localization ??= FindFirstObjectByType<LocalizationService>();
-            panelRoot ??= gameObject;
+            document = FindFirstObjectByType<UIDocument>();
         }
 
         private void OnEnable()
         {
-            if (gameState != null)
-            {
-                gameState.PhaseChanged += HandlePhaseChanged;
-            }
-
-            if (localization != null)
-            {
-                localization.LanguageChanged += RefreshCurrentPhase;
-            }
+            if (gameState != null) gameState.PhaseChanged += HandlePhaseChanged;
+            if (localization != null) localization.LanguageChanged += RefreshCurrentPhase;
         }
 
         private void OnDisable()
         {
-            if (gameState != null)
-            {
-                gameState.PhaseChanged -= HandlePhaseChanged;
-            }
-
-            if (localization != null)
-            {
-                localization.LanguageChanged -= RefreshCurrentPhase;
-            }
+            if (gameState != null) gameState.PhaseChanged -= HandlePhaseChanged;
+            if (localization != null) localization.LanguageChanged -= RefreshCurrentPhase;
         }
 
         private void Start()
         {
+            BindUi();
             HandlePhaseChanged(gameState != null ? gameState.CurrentPhase : GamePhase.BuildPhase);
         }
 
-        public void ChooseFirst()
+        private void BindUi()
         {
-            Choose(0);
+            if (document == null || document.rootVisualElement == null) return;
+            VisualElement root = document.rootVisualElement;
+            panelRoot = root.Q<VisualElement>("upgrade-panel");
+            titleText = root.Q<Label>("upgrade-title");
+            choiceButtons = new[] { root.Q<Button>("upgrade-choice-0"), root.Q<Button>("upgrade-choice-1"), root.Q<Button>("upgrade-choice-2") };
+            if (choiceButtons[0] != null) choiceButtons[0].clicked += ChooseFirst;
+            if (choiceButtons[1] != null) choiceButtons[1].clicked += ChooseSecond;
+            if (choiceButtons[2] != null) choiceButtons[2].clicked += ChooseThird;
         }
 
-        public void ChooseSecond()
-        {
-            Choose(1);
-        }
-
-        public void ChooseThird()
-        {
-            Choose(2);
-        }
-
-        private void Choose(int index)
-        {
-            UpgradeConfig upgrade = GetUpgrade(index);
-            upgradeSystem?.ChooseUpgrade(upgrade);
-        }
+        public void ChooseFirst() => Choose(0);
+        public void ChooseSecond() => Choose(1);
+        public void ChooseThird() => Choose(2);
+        private void Choose(int index) => upgradeSystem?.ChooseUpgrade(GetUpgrade(index));
 
         private void HandlePhaseChanged(GamePhase phase)
         {
             bool isUpgrade = phase == GamePhase.UpgradeChoice;
-            panelRoot.SetActive(isUpgrade);
-
-            if (titleText != null)
-            {
-                titleText.text = isUpgrade ? Text("upgrade.choose_title") : string.Empty;
-            }
-
+            if (panelRoot != null) panelRoot.style.display = isUpgrade ? DisplayStyle.Flex : DisplayStyle.None;
+            if (titleText != null) titleText.text = isUpgrade ? Text("upgrade.choose_title") : string.Empty;
             RefreshChoices(isUpgrade);
         }
 
         private void RefreshChoices(bool isUpgrade)
         {
-            int buttonCount = choiceButtons == null ? 0 : choiceButtons.Length;
-            for (int i = 0; i < buttonCount; i++)
+            if (choiceButtons == null) return;
+            for (int i = 0; i < choiceButtons.Length; i++)
             {
                 Button button = choiceButtons[i];
-                if (button == null)
-                {
-                    continue;
-                }
-
                 UpgradeConfig upgrade = GetUpgrade(i);
-                bool hasUpgrade = isUpgrade && upgrade != null;
-                button.gameObject.SetActive(hasUpgrade);
-                button.interactable = hasUpgrade && upgradeSystem != null && upgradeSystem.CanChooseUpgrade(upgrade);
-
-                TMP_Text label = GetLabel(i);
-                if (label != null)
-                {
-                    label.text = hasUpgrade ? FormatUpgrade(upgrade) : string.Empty;
-                }
+                bool available = isUpgrade && upgrade != null;
+                if (button == null) continue;
+                button.style.display = available ? DisplayStyle.Flex : DisplayStyle.None;
+                button.SetEnabled(available && upgradeSystem != null && upgradeSystem.CanChooseUpgrade(upgrade));
+                button.text = available ? FormatUpgrade(upgrade) : string.Empty;
             }
         }
 
         private UpgradeConfig GetUpgrade(int index)
         {
-            if (upgradeSystem == null || upgradeSystem.AvailableUpgrades == null)
-            {
-                return null;
-            }
-
-            UpgradeConfig[] upgrades = upgradeSystem.AvailableUpgrades;
-            return index >= 0 && index < upgrades.Length ? upgrades[index] : null;
-        }
-
-        private TMP_Text GetLabel(int index)
-        {
-            if (choiceLabels == null || index < 0 || index >= choiceLabels.Length)
-            {
-                return null;
-            }
-
-            return choiceLabels[index];
+            UpgradeConfig[] upgrades = upgradeSystem?.AvailableUpgrades;
+            return upgrades != null && index >= 0 && index < upgrades.Length ? upgrades[index] : null;
         }
 
         private string FormatUpgrade(UpgradeConfig upgrade)
@@ -141,14 +95,7 @@ namespace OrbitalDefense
             return $"{name}\n{description}{suffix}";
         }
 
-        private void RefreshCurrentPhase()
-        {
-            HandlePhaseChanged(gameState != null ? gameState.CurrentPhase : GamePhase.BuildPhase);
-        }
-
-        private string Text(string key, params object[] args)
-        {
-            return localization != null ? localization.Text(key, args) : key;
-        }
+        private void RefreshCurrentPhase() => HandlePhaseChanged(gameState != null ? gameState.CurrentPhase : GamePhase.BuildPhase);
+        private string Text(string key, params object[] args) => localization != null ? localization.Text(key, args) : key;
     }
 }

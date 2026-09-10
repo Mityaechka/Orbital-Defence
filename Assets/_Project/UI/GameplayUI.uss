@@ -51,9 +51,23 @@
     -unity-font-style: bold;
 }
 
+.hud-phase {
+    flex-grow: 1;
+}
+
 .hud-speed {
     min-width: 58px;
     -unity-text-align: middle-center;
+}
+
+.speed-icon-button {
+    width: 58px;
+    min-width: 58px;
+    margin-left: 10px;
+    margin-right: 4px;
+    padding-left: 4px;
+    padding-right: 4px;
+    font-size: 24px;
 }
 
 .build-panel {

@@ -23,7 +23,7 @@ The project lives at `/Users/kaspi/Orbital Defense`. It is a single-player 2D mo
 - ScriptableObject data for buildings, enemies, waves, upgrades, level/time config.
 - ScriptableObject data for world/moon layout.
 - ScriptableObject data for localization text.
-- uGUI + TextMeshPro for UI.
+- UI Toolkit with UXML/USS for runtime UI.
 - PNG sprites, vector-like 2D mobile style.
 - Single-player only.
 - MVP victory is clearing 10 waves.

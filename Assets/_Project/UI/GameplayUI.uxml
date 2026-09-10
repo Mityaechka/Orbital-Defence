@@ -1,4 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="project://database/Assets/_Project/UI/GameplayUI.uss" />
     <ui:VisualElement name="screen" class="screen">
         <ui:VisualElement name="hud-panel" class="panel hud-panel">
             <ui:VisualElement class="hud-row">
@@ -9,7 +10,7 @@
             <ui:VisualElement class="hud-row hud-controls">
                 <ui:Label name="hud-phase" class="hud-phase" text="Build phase" />
                 <ui:Button name="hud-start-wave" class="button button-start" text="Start wave" />
-                <ui:Button name="hud-speed-button" class="button button-speed" text="Speed" />
+                <ui:Button name="hud-speed-button" class="button button-speed speed-icon-button" text="⏩" tooltip="Change speed" />
                 <ui:Label name="hud-speed" class="hud-speed" text="x1" />
             </ui:VisualElement>
         </ui:VisualElement>

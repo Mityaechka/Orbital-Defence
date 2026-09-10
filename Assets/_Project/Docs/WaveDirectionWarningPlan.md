@@ -85,23 +85,23 @@
 Ответственность:
 
 - подписаться на `WaveSystem` и `GameStateController`;
-- показывать/скрывать `RectTransform` с `!`;
+- показывать/скрывать `VisualElement` с `!`;
 - переводить world angle в позицию UI;
 - держать значок внутри safe зоны экрана;
 - сделать короткую анимацию появления/pulse.
 
-Для текущего uGUI:
+Для текущего UI Toolkit:
 
-- объект `WaveDirectionWarning`;
-- `Image` или `TMP_Text` с символом `!`;
-- anchored position считается от центра экрана;
-- радиус позиции зависит от размера Canvas, например `min(width, height) * 0.38f`.
+- элемент `warning-layer` в `GameplayUI.uxml`;
+- динамические `Label` с символом `!`;
+- absolute position считается от центра root-элемента;
+- радиус позиции зависит от размера root, например `min(width, height) * 0.38f`.
 
 ### 5. Генерация Сцены
 
 Так как текущая сцена воспроизводимо собирается через `PrototypeSceneBuilder`, добавить создание warning UI туда:
 
-- создать объект `WaveDirectionWarning` внутри `Canvas`;
+- создать `UIDocument` с `warning-layer` внутри UXML;
 - связать его с `WaveSystem`;
 - скрыть по умолчанию;
 - пересобрать `MainGameplay` через Unity CLI команду `orbital_defense_build_prototype`.
