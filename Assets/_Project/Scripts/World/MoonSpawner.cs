@@ -14,6 +14,10 @@ namespace OrbitalDefense
         [SerializeField] private Sprite slotSprite;
         [SerializeField] private OrbitalSetupController orbitalSetupController;
 
+#if UNITY_EDITOR
+        private bool rebuildScheduled;
+#endif
+
         private void OnEnable()
         {
             WorldConfig.Changed += OnWorldConfigChanged;
@@ -36,7 +40,7 @@ namespace OrbitalDefense
 #if UNITY_EDITOR
             if (!Application.isPlaying)
             {
-                EditorApplication.delayCall += DelayedRebuild;
+                ScheduleEditorRebuild();
                 return;
             }
 #endif
@@ -46,19 +50,26 @@ namespace OrbitalDefense
         private void OnValidate()
         {
 #if UNITY_EDITOR
-            if (!Application.isPlaying)
-            {
-                EditorApplication.delayCall += DelayedRebuild;
-                return;
-            }
+            ScheduleEditorRebuild();
 #endif
-            Rebuild();
         }
 
 #if UNITY_EDITOR
+        private void ScheduleEditorRebuild()
+        {
+            if (Application.isPlaying || rebuildScheduled)
+            {
+                return;
+            }
+
+            rebuildScheduled = true;
+            EditorApplication.delayCall += DelayedRebuild;
+        }
+
         private void DelayedRebuild()
         {
             EditorApplication.delayCall -= DelayedRebuild;
+            rebuildScheduled = false;
             if (this == null)
             {
                 return;
@@ -150,7 +161,8 @@ namespace OrbitalDefense
                 GameObject slot = new GameObject($"{root.name}_{i + 1:00}", typeof(SpriteRenderer));
                 slot.transform.SetParent(root.transform, false);
                 slot.transform.localPosition = position;
-                slot.transform.localScale = new Vector3(0.22f, 0.22f, 1f);
+                slot.transform.localRotation = Quaternion.Euler(0f, 0f, angle - 90f);
+                slot.transform.localScale = new Vector3(0.32f, 0.32f, 1f);
 
                 SpriteRenderer renderer = slot.GetComponent<SpriteRenderer>();
                 renderer.sprite = slotSprite;

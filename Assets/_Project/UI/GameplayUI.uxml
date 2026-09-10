@@ -1,0 +1,55 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="screen" class="screen">
+        <ui:VisualElement name="hud-panel" class="panel hud-panel">
+            <ui:VisualElement class="hud-row">
+                <ui:Label name="hud-minerals" class="hud-value" text="Minerals: 100" />
+                <ui:Label name="hud-core" class="hud-value" text="Command Core: 100/100" />
+                <ui:Label name="hud-wave" class="hud-value" text="Wave: 0/10" />
+            </ui:VisualElement>
+            <ui:VisualElement class="hud-row hud-controls">
+                <ui:Label name="hud-phase" class="hud-phase" text="Build phase" />
+                <ui:Button name="hud-start-wave" class="button button-start" text="Start wave" />
+                <ui:Button name="hud-speed-button" class="button button-speed" text="Speed" />
+                <ui:Label name="hud-speed" class="hud-speed" text="x1" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="build-panel" class="panel build-panel">
+            <ui:VisualElement class="build-info">
+                <ui:Label name="build-selected-slot" class="panel-title" text="Select slot" />
+                <ui:Label name="build-stats" class="body-text" text="Available stats" />
+                <ui:Label name="build-feedback" class="feedback" />
+            </ui:VisualElement>
+            <ui:VisualElement class="build-actions">
+                <ui:Button name="build-mine" class="button button-mine" text="Mine" />
+                <ui:Button name="build-cannon" class="button button-cannon" text="Cannon" />
+                <ui:Button name="build-upgrade" class="button button-upgrade" text="Upgrade" />
+                <ui:Button name="build-sell" class="button button-sell" text="Sell" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="core-panel" class="panel modal core-panel">
+            <ui:Label name="core-title" class="panel-title" text="Command Core" />
+            <ui:Label name="core-status" class="body-text" />
+            <ui:Label name="core-feedback" class="feedback" />
+            <ui:Button name="core-close" class="button button-neutral" text="Close" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="upgrade-panel" class="panel modal upgrade-panel">
+            <ui:Label name="upgrade-title" class="modal-title" text="Choose upgrade" />
+            <ui:VisualElement class="upgrade-choices">
+                <ui:Button name="upgrade-choice-0" class="button upgrade-choice" />
+                <ui:Button name="upgrade-choice-1" class="button upgrade-choice" />
+                <ui:Button name="upgrade-choice-2" class="button upgrade-choice" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="gameover-panel" class="panel modal gameover-panel">
+            <ui:Label name="gameover-title" class="modal-title" />
+            <ui:Label name="gameover-body" class="body-text gameover-body" />
+            <ui:Button name="gameover-restart" class="button button-start gameover-restart" text="Restart" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="warning-layer" class="warning-layer" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -14,8 +15,12 @@ namespace OrbitalDefense
         [SerializeField] private float pulseScale = 0.08f;
         [SerializeField] private float pulseSpeed = 4f;
         [SerializeField] private float fadeSpeed = 8f;
+        [SerializeField] private Color firstDirectionColor = new(1f, 0.18f, 0.12f, 1f);
+        [SerializeField] private Color otherDirectionColor = new(1f, 0.94f, 0.36f, 1f);
 
-        private float angleDegrees;
+        private readonly List<float> activeAngles = new();
+        private readonly List<TMP_Text> markers = new();
+        private readonly List<float> nextWaveAngles = new();
         private bool visible;
 
         private void Awake()
@@ -25,6 +30,7 @@ namespace OrbitalDefense
             warningRect ??= transform as RectTransform;
             canvasGroup ??= GetComponent<CanvasGroup>();
             warningText ??= GetComponentInChildren<TMP_Text>();
+            CacheTemplateMarker();
         }
 
         private void OnEnable()
@@ -69,14 +75,18 @@ namespace OrbitalDefense
 
             if (visible)
             {
-                UpdatePosition();
+                UpdatePositions();
             }
 
             float targetAlpha = visible ? 1f : 0f;
             canvasGroup.alpha = Mathf.MoveTowards(canvasGroup.alpha, targetAlpha, Time.unscaledDeltaTime * fadeSpeed);
 
             float pulse = 1f + Mathf.Sin(Time.unscaledTime * pulseSpeed) * pulseScale;
-            warningRect.localScale = visible ? Vector3.one * pulse : Vector3.one * 0.85f;
+            for (int i = 0; i < markers.Count; i++)
+            {
+                RectTransform markerRect = markers[i].rectTransform;
+                markerRect.localScale = markers[i].gameObject.activeSelf && visible ? Vector3.one * pulse : Vector3.one * 0.85f;
+            }
         }
 
         private void HandlePhaseChanged(GamePhase phase)
@@ -92,12 +102,12 @@ namespace OrbitalDefense
                 return;
             }
 
-            Show(stageAngleDegrees);
+            ShowSingle(stageAngleDegrees, firstDirectionColor);
         }
 
         private void HandleStageWarningEnded()
         {
-            if (gameState != null && gameState.IsGameOver)
+            if (gameState != null && (gameState.IsGameOver || gameState.IsWaveActive))
             {
                 HideImmediate();
                 return;
@@ -114,27 +124,44 @@ namespace OrbitalDefense
                 return;
             }
 
-            if (waveSystem != null && waveSystem.TryGetCurrentOrNextStageDirection(out float nextAngle))
+            if (waveSystem != null && phase == GamePhase.BuildPhase && waveSystem.GetNextWaveDirections(nextWaveAngles) > 0)
             {
-                Show(nextAngle);
+                ShowMany(nextWaveAngles);
                 return;
             }
 
             HideImmediate();
         }
 
-        private void Show(float stageAngleDegrees)
+        private void ShowSingle(float stageAngleDegrees, Color color)
         {
-            angleDegrees = stageAngleDegrees;
+            activeAngles.Clear();
+            activeAngles.Add(stageAngleDegrees);
             visible = true;
 
-            if (warningText != null)
+            EnsureMarkerCount(1);
+            ConfigureMarker(0, color);
+            HideUnusedMarkers(1);
+            UpdatePositions();
+        }
+
+        private void ShowMany(IReadOnlyList<float> stageAngles)
+        {
+            activeAngles.Clear();
+            for (int i = 0; i < stageAngles.Count; i++)
             {
-                warningText.text = "!";
-                warningText.gameObject.SetActive(true);
+                activeAngles.Add(stageAngles[i]);
             }
 
-            UpdatePosition();
+            visible = activeAngles.Count > 0;
+            EnsureMarkerCount(activeAngles.Count);
+            for (int i = 0; i < activeAngles.Count; i++)
+            {
+                ConfigureMarker(i, i == 0 ? firstDirectionColor : otherDirectionColor);
+            }
+
+            HideUnusedMarkers(activeAngles.Count);
+            UpdatePositions();
         }
 
         private void HideImmediate()
@@ -150,9 +177,11 @@ namespace OrbitalDefense
             {
                 warningRect.localScale = Vector3.one * 0.85f;
             }
+
+            HideUnusedMarkers(0);
         }
 
-        private void UpdatePosition()
+        private void UpdatePositions()
         {
             Canvas canvas = GetComponentInParent<Canvas>();
             if (canvas == null || warningRect == null)
@@ -166,9 +195,76 @@ namespace OrbitalDefense
                 return;
             }
 
-            Vector2 direction = new(Mathf.Cos(angleDegrees * Mathf.Deg2Rad), Mathf.Sin(angleDegrees * Mathf.Deg2Rad));
             float radius = Mathf.Min(canvasRect.rect.width, canvasRect.rect.height) * edgeRadiusFactor;
-            warningRect.anchoredPosition = direction * radius;
+            for (int i = 0; i < activeAngles.Count && i < markers.Count; i++)
+            {
+                Vector2 direction = new(Mathf.Cos(activeAngles[i] * Mathf.Deg2Rad), Mathf.Sin(activeAngles[i] * Mathf.Deg2Rad));
+                markers[i].rectTransform.anchoredPosition = direction * radius;
+            }
+        }
+
+        private void CacheTemplateMarker()
+        {
+            if (warningText == null || markers.Contains(warningText))
+            {
+                return;
+            }
+
+            markers.Add(warningText);
+        }
+
+        private void EnsureMarkerCount(int count)
+        {
+            CacheTemplateMarker();
+            if (warningText == null)
+            {
+                return;
+            }
+
+            while (markers.Count < count)
+            {
+                TMP_Text marker = Instantiate(warningText, warningText.transform.parent);
+                marker.name = $"WarningText_{markers.Count + 1:00}";
+                markers.Add(marker);
+            }
+        }
+
+        private void ConfigureMarker(int index, Color color)
+        {
+            if (index < 0 || index >= markers.Count)
+            {
+                return;
+            }
+
+            TMP_Text marker = markers[index];
+            marker.text = "!";
+            marker.color = color;
+            marker.gameObject.SetActive(true);
+            ConfigureMarkerRect(marker.rectTransform);
+        }
+
+        private void HideUnusedMarkers(int usedCount)
+        {
+            for (int i = usedCount; i < markers.Count; i++)
+            {
+                if (markers[i] != null)
+                {
+                    markers[i].gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private static void ConfigureMarkerRect(RectTransform markerRect)
+        {
+            if (markerRect == null)
+            {
+                return;
+            }
+
+            markerRect.anchorMin = new Vector2(0.5f, 0.5f);
+            markerRect.anchorMax = new Vector2(0.5f, 0.5f);
+            markerRect.pivot = new Vector2(0.5f, 0.5f);
+            markerRect.sizeDelta = new Vector2(96f, 96f);
         }
     }
 }

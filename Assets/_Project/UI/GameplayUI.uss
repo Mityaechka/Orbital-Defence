@@ -1,0 +1,203 @@
+.screen {
+    flex-grow: 1;
+    color: rgb(230, 245, 255);
+    -unity-font-definition: resource("Fonts & Materials/LiberationSans SDF");
+}
+
+.panel {
+    background-color: rgba(13, 18, 34, 0.92);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(104, 158, 202, 0.65);
+    border-right-color: rgba(104, 158, 202, 0.65);
+    border-top-color: rgba(104, 158, 202, 0.65);
+    border-bottom-color: rgba(104, 158, 202, 0.65);
+    border-radius: 12px;
+    padding-left: 18px;
+    padding-right: 18px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+.hud-panel {
+    position: absolute;
+    left: 2.2%;
+    right: 2.2%;
+    top: 1.5%;
+    height: 12%;
+}
+
+.hud-row {
+    flex-direction: row;
+    flex-grow: 1;
+    align-items: center;
+}
+
+.hud-value {
+    flex-grow: 1;
+    font-size: 24px;
+    -unity-font-style: bold;
+    margin-right: 12px;
+}
+
+.hud-controls {
+    justify-content: space-between;
+}
+
+.hud-phase, .hud-speed {
+    font-size: 20px;
+    -unity-font-style: bold;
+}
+
+.hud-speed {
+    min-width: 58px;
+    -unity-text-align: middle-center;
+}
+
+.build-panel {
+    position: absolute;
+    left: 2.2%;
+    right: 2.2%;
+    bottom: 2.2%;
+    height: 18%;
+    flex-direction: row;
+}
+
+.build-info {
+    width: 36%;
+    margin-right: 16px;
+}
+
+.build-actions {
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: center;
+}
+
+.build-actions .button {
+    flex-grow: 1;
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+.panel-title {
+    font-size: 22px;
+    -unity-font-style: bold;
+    margin-bottom: 6px;
+}
+
+.body-text {
+    white-space: normal;
+    font-size: 17px;
+}
+
+.feedback {
+    color: rgb(255, 140, 110);
+    font-size: 16px;
+    margin-top: 5px;
+}
+
+.button {
+    min-height: 44px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    margin-left: 6px;
+    margin-right: 6px;
+    border-radius: 8px;
+    color: white;
+    font-size: 17px;
+    -unity-font-style: bold;
+}
+
+.button-start, .button-mine { background-color: rgb(31, 166, 119); }
+.button-speed { background-color: rgb(58, 91, 204); }
+.button-cannon { background-color: rgb(191, 62, 58); }
+.button-upgrade { background-color: rgb(204, 151, 38); }
+.button-sell { background-color: rgb(166, 51, 61); }
+.button-neutral { background-color: rgb(62, 78, 109); }
+
+.modal {
+    display: none;
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 30%;
+    bottom: 30%;
+}
+
+.core-panel {
+    left: 5%;
+    right: 54%;
+    top: 18%;
+    bottom: 61%;
+}
+
+.core-panel .button {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+}
+
+.upgrade-panel {
+    top: 29%;
+    bottom: 29%;
+}
+
+.modal-title {
+    font-size: 28px;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    margin-bottom: 16px;
+}
+
+.upgrade-choices {
+    flex-grow: 1;
+    flex-direction: row;
+}
+
+.upgrade-choice {
+    flex-grow: 1;
+    white-space: normal;
+    margin-left: 8px;
+    margin-right: 8px;
+    background-color: rgb(57, 93, 201);
+}
+
+.gameover-panel {
+    left: 16%;
+    right: 16%;
+    top: 34%;
+    bottom: 34%;
+    align-items: center;
+}
+
+.gameover-body {
+    flex-grow: 1;
+    -unity-text-align: middle-center;
+}
+
+.gameover-restart {
+    width: 42%;
+}
+
+.warning-layer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    opacity: 0;
+}
+
+.warning-marker {
+    position: absolute;
+    width: 72px;
+    height: 72px;
+    font-size: 54px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}

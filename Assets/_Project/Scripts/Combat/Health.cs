@@ -38,6 +38,7 @@ namespace OrbitalDefense
             }
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
+            VisualEffectSpawner.SpawnEnemyDamage(amount, transform.position);
             Changed?.Invoke(CurrentHealth, MaxHealth);
 
             if (CurrentHealth == 0)

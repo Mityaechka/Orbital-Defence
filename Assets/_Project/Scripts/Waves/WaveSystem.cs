@@ -223,6 +223,18 @@ namespace OrbitalDefense
             return TryGetNextWaveDirection(out angleDegrees);
         }
 
+        public int GetNextWaveDirections(List<float> results)
+        {
+            if (results == null)
+            {
+                return 0;
+            }
+
+            results.Clear();
+            AddWaveDirections(NextWaveConfig, results);
+            return results.Count;
+        }
+
         private bool TryGetWaveDirection(int waveIndex, out float angleDegrees)
         {
             angleDegrees = 0f;
@@ -233,6 +245,23 @@ namespace OrbitalDefense
             }
 
             return TryGetStageDirection(waves[waveIndex], 0, out angleDegrees);
+        }
+
+        private static void AddWaveDirections(WaveConfig wave, List<float> results)
+        {
+            if (wave == null || wave.SpawnGroups == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < wave.SpawnGroups.Length; i++)
+            {
+                EnemySpawnGroup group = wave.SpawnGroups[i];
+                if (group != null && group.Count > 0)
+                {
+                    results.Add(group.AngleDegrees);
+                }
+            }
         }
 
         private static bool TryGetStageDirection(WaveConfig wave, int startIndex, out float angleDegrees)

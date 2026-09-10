@@ -4,6 +4,10 @@ namespace OrbitalDefense
 {
     public sealed class BuildSystem : MonoBehaviour
     {
+        private const float MineWorldScale = 0.78f;
+        private const float CannonWorldScale = 0.66f;
+        private const float BoosterWorldScale = 0.72f;
+
         [SerializeField] private GameStateController gameState;
         [SerializeField] private ResourceWallet wallet;
         [SerializeField] private RunModifiers modifiers;
@@ -36,7 +40,9 @@ namespace OrbitalDefense
             modifiers?.ConsumeBuildingCostMultiplier();
 
             Transform point = slot.PlacementPoint;
-            Building building = Instantiate(config.Prefab, point.position, point.rotation, point);
+            Transform parent = point.parent != null ? point.parent : point;
+            Building building = Instantiate(config.Prefab, point.position, point.rotation, parent);
+            StabilizeBuildingTransform(building.transform, config);
             building.Initialize(config, slot);
             slot.Occupy(building);
             AudioService.PlayBuild();
@@ -117,6 +123,49 @@ namespace OrbitalDefense
         public bool CanAffordUpgrade(Building building)
         {
             return wallet == null || wallet.CanSpend(GetUpgradeCost(building));
+        }
+
+        private static void StabilizeBuildingTransform(Transform building, BuildingConfig config)
+        {
+            if (building == null || config == null)
+            {
+                return;
+            }
+
+            Transform parent = building.parent;
+            if (parent == null)
+            {
+                building.localScale = Vector3.one * GetBuildingWorldScale(config.Kind);
+                return;
+            }
+
+            Vector3 targetWorldScale = Vector3.one * GetBuildingWorldScale(config.Kind);
+            Vector3 parentScale = parent.lossyScale;
+            building.localScale = new Vector3(
+                SafeDivide(targetWorldScale.x, parentScale.x),
+                SafeDivide(targetWorldScale.y, parentScale.y),
+                SafeDivide(targetWorldScale.z, parentScale.z));
+
+            foreach (SpriteRenderer renderer in building.GetComponentsInChildren<SpriteRenderer>())
+            {
+                renderer.sortingOrder = Mathf.Max(renderer.sortingOrder, 12);
+            }
+        }
+
+        private static float SafeDivide(float value, float divisor)
+        {
+            return Mathf.Abs(divisor) > 0.0001f ? value / divisor : value;
+        }
+
+        private static float GetBuildingWorldScale(BuildingKind kind)
+        {
+            return kind switch
+            {
+                BuildingKind.Mine => MineWorldScale,
+                BuildingKind.Cannon => CannonWorldScale,
+                BuildingKind.OrbitalBooster => BoosterWorldScale,
+                _ => CannonWorldScale
+            };
         }
     }
 }

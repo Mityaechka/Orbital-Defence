@@ -45,7 +45,9 @@ namespace OrbitalDefense
                 return;
             }
 
-            coreIntegrity.TakeDamage(enemyMover.Config.CoreDamage);
+            int damage = enemyMover.Config.CoreDamage;
+            coreIntegrity.TakeDamage(damage);
+            VisualEffectSpawner.SpawnCoreDamageNumber(damage, target.position);
             VisualEffectSpawner.SpawnCoreDamage(target.position);
             AudioService.PlayCoreDamage();
             Destroy(gameObject);
